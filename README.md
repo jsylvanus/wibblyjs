@@ -20,8 +20,7 @@ A space-separated list of parameters starting with the type of background to use
 
 ### (optional) data-top="<bezier values\>", data-bottom="<bezier values\>"
 
-<bezier values\> is a series of eight floating point numbers representing a bezier curve from left to right. -top and -bottom determine which curve you're specifying. 
-Both of these attributes are optional, but you should specify one or both, otherwise you've just got a box...
+<bezier values\> is a series of eight floating point numbers representing a bezier curve from left to right. -top and -bottom determine which curve you're specifying. Each value should be separated by a single space.
 
 From left to right, the values are a set of four X, Y pairs as follows:
 
@@ -32,6 +31,8 @@ Example:
 	<section id="curve-me" data-top="0 0.5 0.33 1 0.66 0 1 0.5" data-background="solid #000">
 		...
 	</section>
+
+Both of these attributes are optional, but you should specify one or both, otherwise you've just got a box...
 
 ## Javascript Usage
 
