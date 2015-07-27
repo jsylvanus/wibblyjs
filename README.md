@@ -11,11 +11,11 @@ Create an element with the following attributes:
 A space-separated list of parameters starting with the type of background to use. Valid types:
 
 * **image**: second parameter should be the image path. The image will be stretched to fill the container, maintaining aspect ratio.
-* **solid**: used for solid backgrounds; 2nd parameter is anything conforming to the [CSS \<color\> value](https://developer.mozilla.org/en-US/docs/Web/CSS/color_value).
+* **solid**: used for solid backgrounds; 2nd parameter is anything conforming to the [CSS <color\> value](https://developer.mozilla.org/en-US/docs/Web/CSS/color_value).
 
-### (optional) data-top="\<bezier values\>", data-bottom="\<bezier values\>"
+### (optional) data-top="<bezier values\>", data-bottom="<bezier values\>"
 
-\<bezier values\> is a series of eight floating point numbers representing a bezier curve from left to right. -top and -bottom determine which curve you're specifying. 
+<bezier values\> is a series of eight floating point numbers representing a bezier curve from left to right. -top and -bottom determine which curve you're specifying. 
 Both of these attributes are optional, but you should specify one or both, otherwise you've just got a box...
 
 Example:
