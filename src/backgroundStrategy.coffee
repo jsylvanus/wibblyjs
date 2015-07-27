@@ -17,7 +17,10 @@ class @BackgroundStrategy
       when 'solid'
         new SolidBackground(segments[1])
       when 'image'
-        new ImageBackground(segments[1])
+        if segments.length is 2
+          new ImageBackground(segments[1])
+        else
+          new ImageBackground(segments.slice(1))
       else
         throw "\"#{segments[0]}\" is not a valid background type"
 

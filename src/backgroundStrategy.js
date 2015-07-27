@@ -17,7 +17,12 @@
         case 'solid':
           return new SolidBackground(segments[1]);
         case 'image':
-          return new ImageBackground(segments[1]);
+          if (segments.length === 2) {
+            return new ImageBackground(segments[1]);
+          } else {
+            return new ImageBackground(segments.slice(1));
+          }
+          break;
         default:
           throw "\"" + segments[0] + "\" is not a valid background type";
       }

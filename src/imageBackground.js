@@ -7,7 +7,13 @@
     extend(ImageBackground, superClass);
 
     function ImageBackground(url) {
-      this.image = this.createImage(url);
+      if (typeof url === 'string') {
+        this.image = this.createImage(url);
+      } else if (typeof url === 'object' && url instanceof Array) {
+        this.image = this.createSrcSetImage(url);
+      } else {
+        throw "url provided to ImageBackground constructor must be string or array";
+      }
     }
 
     ImageBackground.prototype.renderToCanvas = function(element, context, dTime) {
@@ -23,6 +29,22 @@
       scaledDims = imageDims.scaleToFit(dims);
       offset = scaledDims.centerOffset(dims);
       return context.drawImage(this.image, offset.x(), offset.y(), scaledDims.width(), scaledDims.height());
+    };
+
+    ImageBackground.prototype.createSrcSetImage = function(values) {
+      var img;
+      img = document.createElement('img');
+      img.addEventListener('load', (function(_this) {
+        return function() {
+          return _this.setReady();
+        };
+      })(this));
+      if (this.isSrcsetSupported()) {
+        img.srcset = values.join(' ');
+      } else {
+        img.src = values[0];
+      }
+      return img;
     };
 
     ImageBackground.prototype.createImage = function(url) {
@@ -46,6 +68,12 @@
 
     ImageBackground.prototype.setCallback = function(fn) {
       return this.callback = fn;
+    };
+
+    ImageBackground.prototype.isSrcsetSupported = function() {
+      var img;
+      img = document.createElement('img');
+      return typeof img.srcset === 'string';
     };
 
     return ImageBackground;
