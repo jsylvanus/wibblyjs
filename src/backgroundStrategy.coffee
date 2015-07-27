@@ -33,6 +33,8 @@ class @BackgroundStrategy
 
   # the following are intended to be overridden by subclasses
 
+  # Note dTime (Delta Time) is intended to be time-since-last-render, currently unused.
+  # dTime exists to allow for smooth animation based on requestAnimationFrame()
   renderToCanvas : (element, context, dTime = 0) ->
     null # implement me
 

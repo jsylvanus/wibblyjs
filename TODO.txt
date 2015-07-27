@@ -1,0 +1,11 @@
+* Built-in CSS
+* video and anigif background strategies
+* ability to animate control points on beziers
+
+also via $ grep TODO -r .
+
+./src/dimensions.coffee:  # TODO: refactor name
+./src/imageBackground.coffee:  # TODO: refactor to allow different positioning from center
+./src/vector.coffee:  # TODO: Maybe make a better version? this won't catch nested objects, should 
+./src/wibblyElement.coffee:  # TODO: throttle or debouce?
+
