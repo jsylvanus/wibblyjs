@@ -1,6 +1,7 @@
 * Built-in CSS
 * video and anigif background strategies
 * ability to animate control points on beziers
+* support for native srcset-style image defs / limited emulation if not available?
 
 also via $ grep TODO -r .
 
