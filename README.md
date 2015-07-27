@@ -11,7 +11,12 @@ Create an element with the following attributes:
 A space-separated list of parameters starting with the type of background to use. Valid types:
 
 * **image**: second parameter should be the image path. The image will be stretched to fill the container, maintaining aspect ratio.
+
+        <div data-background="image https://your-domain/your-image.png">...</div>
+
 * **solid**: used for solid backgrounds; 2nd parameter is anything conforming to the [CSS <color\> value](https://developer.mozilla.org/en-US/docs/Web/CSS/color_value).
+
+        <div data-background="solid #000">...</div>
 
 ### (optional) data-top="<bezier values\>", data-bottom="<bezier values\>"
 
@@ -37,4 +42,3 @@ For jQuery (which is not required), you might do something like:
 			new WibblyElement(el);
 		});
 	});
-
