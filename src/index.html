@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title></title>
+    <script src="vector.js"></script>
+    <script src="dimensions.js"></script>
+    <script src="scalableBezier.js"></script>
+    <script src="backgroundStrategy.js"></script>
+    <script src="imageBackground.js"></script>
+    <script src="solidBackground.js"></script>
+    <script src="wibblyElement.js"></script>
+    <style type="text/css">
+        .imagetest {
+            color: white;
+            padding: 3em 1em 200px 1em;
+            margin-bottom: 10vw;
+            background: url(http://6lg6m8o6jlvetm53ijzpndl7.wpengine.netdna-cdn.com/wp-content/themes/bigsea2013/img/culture-images/IMG_7164.jpg);
+            background-size: cover;
+            background-position: center;
+        }
+        .solidtest {
+            color: white;
+            padding: 200px 1em 3em 1em;
+            margin-top: 10vw;
+            background: black;
+        }
+        .wibbly-element {
+            z-index: 1;
+        }
+        .inner {
+            z-index: 2;
+            padding: 5em 1em;
+        }
+    </style>
+</head>
+<body>
+
+<div class="imagetest">
+    <h2>Image Test</h2>
+</div>
+<div class="wibbly-element" data-top="0 0.5 0.33 1 0.66 0 1 0.5" data-bottom="0 1 0.33 0 0.66 0 1 1" data-background="image http://6lg6m8o6jlvetm53ijzpndl7.wpengine.netdna-cdn.com/wp-content/themes/bigsea2013/img/bg-about.jpg" style="margin-top: -10vw; margin-bottom: -10vw">
+    <div class="inner">
+        <h1 style="color:white;">Motherfucking Beziers</h1>
+    </div>
+</div>
+<div class="solidtest">
+    <h3>Solid Test</h3>
+</div>
+    
+<script>
+    window.wibble = new WibblyElement(document.querySelector('.wibbly-element'));
+</script>
+
+</body>
+</html>
