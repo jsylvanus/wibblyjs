@@ -33,6 +33,7 @@ module.exports = function(grunt) {
 					'build/backgroundStrategy.js',
 					'build/imageBackground.js',
 					'build/solidBackground.js',
+					'build/videoBackground.js',
 					'build/wibblyElement.js'
 	    		]
 	    	}

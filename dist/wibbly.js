@@ -182,7 +182,7 @@
 ;(function() {
   this.BackgroundStrategy = (function() {
     BackgroundStrategy.Factory = function(attribute_string) {
-      var segments;
+      var error, segments;
       if (attribute_string == null) {
         attribute_string = 'solid #000';
       }
@@ -196,6 +196,18 @@
       switch (segments[0]) {
         case 'solid':
           return new SolidBackground(segments[1]);
+        case 'video':
+          try {
+            return new VideoBackground(segments[1]);
+          } catch (_error) {
+            error = _error;
+            if (error === "No HTML5 video support detected") {
+              return new ImageBackground(segments[1] + '.jpg');
+            } else {
+              throw error;
+            }
+          }
+          break;
         case 'image':
           if (segments.length === 2) {
             return new ImageBackground(segments[1]);
@@ -210,9 +222,13 @@
 
     function BackgroundStrategy() {
       this.ready = false;
+      this.requiresRedrawing = false;
     }
 
     BackgroundStrategy.prototype.getDimensions = function(element) {
+      if (element instanceof HTMLVideoElement) {
+        return new Dimensions(element.videoWidth, element.videoHeight);
+      }
       return new Dimensions(element.width, element.height);
     };
 
@@ -240,6 +256,7 @@
     __extends(ImageBackground, _super);
 
     function ImageBackground(url) {
+      ImageBackground.__super__.constructor.call(this);
       if (typeof url === 'string') {
         this.image = this.createImage(url);
       } else if (typeof url === 'object' && url instanceof Array) {
@@ -320,6 +337,7 @@
     __extends(SolidBackground, _super);
 
     function SolidBackground(color) {
+      SolidBackground.__super__.constructor.call(this);
       this.color = color;
       this.ready = true;
     }
@@ -340,9 +358,95 @@
 
 }).call(this);
 ;(function() {
+  var __hasProp = {}.hasOwnProperty,
+    __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+
+  this.VideoBackground = (function(_super) {
+    __extends(VideoBackground, _super);
+
+    function VideoBackground(baseurl) {
+      VideoBackground.__super__.constructor.call(this);
+      this.requiresRedrawing = true;
+      if (!this.detectVideoSupport()) {
+        throw "No HTML5 video support detected";
+      }
+      this.video = this.createVideoElement(baseurl);
+      document.video_test = this.video;
+    }
+
+    VideoBackground.prototype.createVideoElement = function(baseurl) {
+      var video,
+        _this = this;
+      video = document.createElement('video');
+      video.addEventListener('playing', function() {
+        return _this.setReady();
+      });
+      video.attributes.setNamedItem(this.createAttribute('poster', "" + baseurl + ".jpg"));
+      video.attributes.setNamedItem(this.createAttribute('loop', 'loop'));
+      video.attributes.setNamedItem(this.createAttribute('autoplay', 'autoplay'));
+      video.appendChild(this.createSource("" + baseurl + ".webm", 'video/webm; codecs="vp8.0, vorbis"'));
+      video.appendChild(this.createSource("" + baseurl + ".ogv", 'video/ogg; codecs="theora, vorbis"'));
+      video.appendChild(this.createSource("" + baseurl + ".mp4", 'video/mp4; codecs="avc1.4D401E, mp4a.40.2"'));
+      return video;
+    };
+
+    VideoBackground.prototype.createSource = function(path, type) {
+      var source;
+      source = document.createElement('source');
+      source.attributes.setNamedItem(this.createAttribute('type', type));
+      source.attributes.setNamedItem(this.createAttribute('src', path));
+      return source;
+    };
+
+    VideoBackground.prototype.createAttribute = function(name, val) {
+      var attr;
+      attr = document.createAttribute(name);
+      attr.value = val;
+      return attr;
+    };
+
+    VideoBackground.prototype.detectVideoSupport = function() {
+      var element;
+      element = document.createElement('video');
+      return typeof element.play === 'function' && typeof requestAnimationFrame === 'function';
+    };
+
+    VideoBackground.prototype.renderToCanvas = function(element, context, dTime) {
+      var dims, imageDims, offset, scaledDims;
+      if (dTime == null) {
+        dTime = 0;
+      }
+      if (!this.ready) {
+        return;
+      }
+      dims = this.getDimensions(element);
+      imageDims = this.getDimensions(this.video);
+      scaledDims = imageDims.scaleToFit(dims);
+      offset = scaledDims.centerOffset(dims);
+      return context.drawImage(this.video, offset.x(), offset.y(), scaledDims.width(), scaledDims.height());
+    };
+
+    VideoBackground.prototype.setReady = function() {
+      this.ready = true;
+      if (this.callback !== null) {
+        return this.callback();
+      }
+    };
+
+    VideoBackground.prototype.setCallback = function(fn) {
+      return this.callback = fn;
+    };
+
+    return VideoBackground;
+
+  })(this.BackgroundStrategy);
+
+}).call(this);
+;(function() {
   this.WibblyElement = (function() {
     function WibblyElement(element) {
       this.element = element;
+      this.isFirstAnimation = true;
       this.element.style.position = 'relative';
       this.top = this.loadBezier(this.element, 'data-top');
       this.bottom = this.loadBezier(this.element, 'data-bottom');
@@ -374,7 +478,8 @@
       }
       this.background = BackgroundStrategy.Factory(attribute.value);
       return this.background.setCallback(function() {
-        return _this.adjustCanvas();
+        _this.adjustCanvas(_this.isFirstAnimation);
+        return _this.isFirstAnimation = false;
       });
     };
 
@@ -406,8 +511,11 @@
       });
     };
 
-    WibblyElement.prototype.adjustCanvas = function() {
+    WibblyElement.prototype.adjustCanvas = function(first_call) {
       var dims, height, width;
+      if (first_call == null) {
+        first_call = false;
+      }
       dims = this.getElementDimensions(this.element);
       this.canvas.style.top = "" + dims.topMargin + "px";
       height = Math.abs(dims.topMargin) + Math.abs(dims.bottomMargin) + dims.height;
@@ -416,11 +524,29 @@
       width = dims.width;
       this.canvas.width = width;
       this.canvas.style.width = "" + width + "px";
-      return this.draw(dims);
+      if (first_call && this.background.requiresRedrawing) {
+        return this.animatedDraw(dims, 0);
+      } else {
+        return this.draw(dims, 0);
+      }
     };
 
-    WibblyElement.prototype.draw = function(dims) {
+    WibblyElement.prototype.animatedDraw = function(dims, timestamp) {
+      var _this = this;
+      if (timestamp == null) {
+        timestamp = 0;
+      }
+      this.draw(dims, timestamp);
+      return requestAnimationFrame(function(ts) {
+        return _this.animatedDraw(_this.getElementDimensions(_this.element), ts);
+      });
+    };
+
+    WibblyElement.prototype.draw = function(dims, timestamp) {
       var bottomBezier, topBezier;
+      if (timestamp == null) {
+        timestamp = 0;
+      }
       this.context.clearRect(0, 0, parseFloat(this.canvas.style.width), parseFloat(this.canvas.style.height));
       this.context.beginPath();
       if (this.top !== null) {
@@ -441,7 +567,7 @@
       this.context.closePath();
       this.context.clip();
       if (this.background.ready) {
-        return this.background.renderToCanvas(this.canvas, this.context);
+        return this.background.renderToCanvas(this.canvas, this.context, timestamp);
       }
     };
 

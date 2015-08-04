@@ -2,6 +2,7 @@
 class @WibblyElement
   
   constructor: (@element) ->
+    @isFirstAnimation = yes
     @element.style.position = 'relative'
     @top = @loadBezier(@element, 'data-top')
     @bottom = @loadBezier(@element, 'data-bottom')
@@ -29,7 +30,8 @@ class @WibblyElement
 
     @background = BackgroundStrategy.Factory attribute.value
     @background.setCallback =>
-      @adjustCanvas()
+      @adjustCanvas @isFirstAnimation
+      @isFirstAnimation = no
 
 
   # Creats canvas element and 2d context
@@ -63,7 +65,8 @@ class @WibblyElement
 
 
   # Adjusts canvas to cover its containing element
-  adjustCanvas : ->
+  adjustCanvas : (first_call = no) ->
+
     dims = @getElementDimensions @element
     @canvas.style.top = "#{dims.topMargin}px"
 
@@ -75,11 +78,20 @@ class @WibblyElement
     @canvas.width = width
     @canvas.style.width = "#{width}px"
 
-    @draw dims
+    if first_call and @background.requiresRedrawing
+      @animatedDraw dims, 0
+    else
+      @draw dims, 0
+
+
+  animatedDraw : (dims, timestamp = 0) ->
+    @draw(dims, timestamp)
+    requestAnimationFrame (ts) => @animatedDraw(@getElementDimensions(@element), ts)
 
 
   # Draws the bezier mask and background
-  draw : (dims) ->
+  draw : (dims, timestamp = 0) ->
+
     # clear the canvas
     @context.clearRect(0, 0, parseFloat(@canvas.style.width), parseFloat(@canvas.style.height))
     
@@ -107,6 +119,6 @@ class @WibblyElement
     @context.clip() # treat the above drawing as a clipping mask for the background
 
     # draw the background
-    @background.renderToCanvas(@canvas, @context) if @background.ready
+    @background.renderToCanvas(@canvas, @context, timestamp) if @background.ready
 
     

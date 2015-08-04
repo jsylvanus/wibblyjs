@@ -2,6 +2,7 @@
 class @SolidBackground extends @BackgroundStrategy
   
   constructor: (color) ->
+    super()
     @color = color
     @ready = yes
 
