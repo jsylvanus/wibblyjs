@@ -32,6 +32,8 @@ class @ScalableBezier
 
   # draws a line to the start of the curve, and draws the curve to the given context
   applyToCanvas: (context, offsetX = 0, offsetY = 0) ->
+    # console.log "applying bezier", @
+    # console.log @startX + offsetX, @startY + offsetY, @controlX1 + offsetX, @controlY1 + offsetY, @controlX2 + offsetX, @controlY2 + offsetY, @endX + offsetX, @endY + offsetY
     context.lineTo offsetX + @startX, offsetY + @startY
     context.bezierCurveTo @controlX1 + offsetX, @controlY1 + offsetY, @controlX2 + offsetX, @controlY2 + offsetY, @endX + offsetX, @endY + offsetY
 

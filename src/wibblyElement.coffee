@@ -97,6 +97,7 @@ class @WibblyElement
     # if bottom bezier exists, apply to canvas, else just draw the surrounding box points
     if @bottom isnt null
       bottomBezier = @bottom.scale(dims.width, Math.abs(dims.bottomMargin)).reverse()
+      # console.log(bottomBezier, dims.height + Math.abs(dims.topMargin) + Math.abs(dims.bottomMargin))
       bottomBezier.applyToCanvas(@context, 0, dims.height + Math.abs(dims.topMargin))
     else
       @context.lineTo(dims.width, dims.height + Math.abs(dims.topMargin) + Math.abs(dims.bottomMargin))
