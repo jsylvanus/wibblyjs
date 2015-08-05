@@ -447,6 +447,10 @@
     function WibblyElement(element) {
       this.element = element;
       this.isFirstAnimation = true;
+      this.compositeSupported = this.isCompositeSupported();
+      if (this.compositeSupported) {
+        console.log("Composite Supported");
+      }
       this.element.style.position = 'relative';
       this.top = this.loadBezier(this.element, 'data-top');
       this.bottom = this.loadBezier(this.element, 'data-bottom');
@@ -455,6 +459,14 @@
       this.hookEvents();
       this.adjustCanvas();
     }
+
+    WibblyElement.prototype.isCompositeSupported = function() {
+      var ctx, test;
+      test = document.createElement('canvas');
+      ctx = test.getContext('2d');
+      ctx.globalCompositeOperation = 'destination-in';
+      return ctx.globalCompositeOperation === 'destination-in';
+    };
 
     WibblyElement.prototype.loadBezier = function(element, attrib) {
       var attr, test;
@@ -490,6 +502,7 @@
       this.canvas.style.top = 0;
       this.canvas.style.zIndex = -1;
       this.context = this.canvas.getContext('2d');
+      this.context.globalCompositeOperation = 'destination-in';
       return this.element.appendChild(this.canvas);
     };
 
@@ -542,12 +555,8 @@
       });
     };
 
-    WibblyElement.prototype.draw = function(dims, timestamp) {
+    WibblyElement.prototype.drawClippingShape = function(dims) {
       var bottomBezier, topBezier;
-      if (timestamp == null) {
-        timestamp = 0;
-      }
-      this.context.clearRect(0, 0, parseFloat(this.canvas.style.width), parseFloat(this.canvas.style.height));
       this.context.beginPath();
       if (this.top !== null) {
         topBezier = this.top.scale(dims.width, Math.abs(dims.topMargin));
@@ -559,16 +568,24 @@
       }
       if (this.bottom !== null) {
         bottomBezier = this.bottom.scale(dims.width, Math.abs(dims.bottomMargin)).reverse();
-        bottomBezier.applyToCanvas(this.context, 0, dims.height + Math.abs(dims.topMargin));
+        return bottomBezier.applyToCanvas(this.context, 0, dims.height + Math.abs(dims.topMargin));
       } else {
         this.context.lineTo(dims.width, dims.height + Math.abs(dims.topMargin) + Math.abs(dims.bottomMargin));
-        this.context.lineTo(0, dims.height + Math.abs(dims.topMargin) + Math.abs(dims.bottomMargin));
+        return this.context.lineTo(0, dims.height + Math.abs(dims.topMargin) + Math.abs(dims.bottomMargin));
       }
-      this.context.closePath();
-      this.context.clip();
+    };
+
+    WibblyElement.prototype.draw = function(dims, timestamp) {
+      if (timestamp == null) {
+        timestamp = 0;
+      }
+      this.context.globalCompositeOperation = 'source-over';
       if (this.background.ready) {
-        return this.background.renderToCanvas(this.canvas, this.context, timestamp);
+        this.background.renderToCanvas(this.canvas, this.context, timestamp);
       }
+      this.context.globalCompositeOperation = 'destination-in';
+      this.drawClippingShape(dims);
+      return this.context.fill();
     };
 
     return WibblyElement;

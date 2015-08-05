@@ -3,6 +3,8 @@ class @WibblyElement
   
   constructor: (@element) ->
     @isFirstAnimation = yes
+    @compositeSupported = @isCompositeSupported()
+    console.log "Composite Supported" if @compositeSupported
     @element.style.position = 'relative'
     @top = @loadBezier(@element, 'data-top')
     @bottom = @loadBezier(@element, 'data-bottom')
@@ -10,6 +12,13 @@ class @WibblyElement
     @createCanvas()
     @hookEvents()
     @adjustCanvas()
+
+
+  isCompositeSupported : ->
+    test = document.createElement 'canvas'
+    ctx = test.getContext '2d'
+    ctx.globalCompositeOperation = 'destination-in'
+    return ctx.globalCompositeOperation is 'destination-in'
 
 
   # loads a bezier attribute into a ScalableBezier object
@@ -44,6 +53,8 @@ class @WibblyElement
     @canvas.style.zIndex = -1
 
     @context = @canvas.getContext '2d'
+    @context.globalCompositeOperation = 'destination-in'
+
     @element.appendChild @canvas
   
 
@@ -89,12 +100,7 @@ class @WibblyElement
     requestAnimationFrame (ts) => @animatedDraw(@getElementDimensions(@element), ts)
 
 
-  # Draws the bezier mask and background
-  draw : (dims, timestamp = 0) ->
-
-    # clear the canvas
-    @context.clearRect(0, 0, parseFloat(@canvas.style.width), parseFloat(@canvas.style.height))
-    
+  drawClippingShape : (dims) ->
     @context.beginPath()
 
     # if top bezier exists, apply to canvas, else just draw the surrounding box points
@@ -109,16 +115,26 @@ class @WibblyElement
     # if bottom bezier exists, apply to canvas, else just draw the surrounding box points
     if @bottom isnt null
       bottomBezier = @bottom.scale(dims.width, Math.abs(dims.bottomMargin)).reverse()
-      # console.log(bottomBezier, dims.height + Math.abs(dims.topMargin) + Math.abs(dims.bottomMargin))
       bottomBezier.applyToCanvas(@context, 0, dims.height + Math.abs(dims.topMargin))
     else
       @context.lineTo(dims.width, dims.height + Math.abs(dims.topMargin) + Math.abs(dims.bottomMargin))
       @context.lineTo(0, dims.height + Math.abs(dims.topMargin) + Math.abs(dims.bottomMargin))
 
-    @context.closePath()
-    @context.clip() # treat the above drawing as a clipping mask for the background
+    # @context.closePath()
+    # @context.fill()
+    # @context.clip() # treat the above drawing as a clipping mask for the background
 
-    # draw the background
+
+  # Draws the bezier mask and background
+  draw : (dims, timestamp = 0) ->
+
+    # draw the video first
+    @context.globalCompositeOperation = 'source-over'
     @background.renderToCanvas(@canvas, @context, timestamp) if @background.ready
+
+    # then mask it via destination-in compositing (much faster than clipping video)
+    @context.globalCompositeOperation = 'destination-in'
+    @drawClippingShape(dims)
+    @context.fill()
 
     

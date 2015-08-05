@@ -57,6 +57,7 @@ class @VideoBackground extends @BackgroundStrategy
     @ready = yes
     @callback() if @callback isnt null
 
+
   setCallback : (fn) ->
     @callback = fn
 
