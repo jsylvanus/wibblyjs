@@ -10,6 +10,10 @@ Create an element with the following attributes:
 
 A space-separated list of parameters starting with the type of background to use. Valid types:
 
+* **video**: second parameter should be a basename, to which ogv/mp4/webm/jpg are appended to determine the video to load. The following would load "/videos/myvideobasename.ogv" etc, for example:
+
+        <div data-background="video /videos/myvideobasename">
+
 * **image**: second parameter should be the image path. The image will be stretched to fill the container, maintaining aspect ratio.
 
         <div data-background="image https://your-domain/your-image.png">...</div>
