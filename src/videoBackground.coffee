@@ -13,30 +13,31 @@ class @VideoBackground extends @BackgroundStrategy
   createVideoElement : (baseurl) ->
     video = document.createElement('video')
     video.addEventListener 'playing', => @setReady()
-    video.attributes.setNamedItem(@createAttribute('poster', "#{baseurl}.jpg"))
-    video.attributes.setNamedItem(@createAttribute('loop','loop'))
-    video.attributes.setNamedItem(@createAttribute('autoplay','autoplay'))
+    @setAttribute video, 'poster', "#{baseurl}.jpg"
+    @setAttribute video, 'autoplay', 'autoplay'
+    @setAttribute video, 'loop', 'loop'
     video.appendChild @createSource("#{baseurl}.webm", 'video/webm; codecs="vp8.0, vorbis"')
     video.appendChild @createSource("#{baseurl}.ogv", 'video/ogg; codecs="theora, vorbis"')
     video.appendChild @createSource("#{baseurl}.mp4", 'video/mp4; codecs="avc1.4D401E, mp4a.40.2"')
     video
 
 
+  setAttribute : (element, name, value) ->
+    attr = document.createAttribute name
+    attr.value = value
+    element.attributes.setNamedItem attr
+
+
   createSource: (path, type) ->
-    source = document.createElement('source')
-    source.attributes.setNamedItem(@createAttribute('type',type))
-    source.attributes.setNamedItem(@createAttribute('src',path))
+    source = document.createElement 'source'
+    @setAttribute source, 'type', type
+    @setAttribute source, 'src', path
     source
-
-
-  createAttribute : (name, val) ->
-    attr = document.createAttribute(name)
-    attr.value = val
-    attr
 
 
   detectVideoSupport : ->
     element = document.createElement('video')
+    # rAF could be polyfill'd if not present, we mostly just need to know that video is supported
     typeof element.play is 'function' and typeof requestAnimationFrame is 'function'
 
 

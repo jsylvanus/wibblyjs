@@ -127,14 +127,25 @@ class @WibblyElement
 
   # Draws the bezier mask and background
   draw : (dims, timestamp = 0) ->
-
-    # draw the video first
-    @context.globalCompositeOperation = 'source-over'
-    @background.renderToCanvas(@canvas, @context, timestamp) if @background.ready
-
-    # then mask it via destination-in compositing (much faster than clipping video)
-    @context.globalCompositeOperation = 'destination-in'
-    @drawClippingShape(dims)
-    @context.fill()
-
     
+    if @compositeSupported # faster composite operation version
+      
+      # draw the video first
+      @context.globalCompositeOperation = 'source-over'
+      @background.renderToCanvas(@canvas, @context, timestamp) if @background.ready
+
+      # then mask it via destination-in compositing (much faster than clipping video)
+      @context.globalCompositeOperation = 'destination-in'
+      @drawClippingShape(dims)
+      @context.fill()
+
+    else # slow version
+
+      # draw the clipping mask
+      @drawClippingShape(dims)
+      @context.fill()
+      @context.clip()
+
+      # draw the background into the clipping region
+      @background.renderToCanvas(@canvas, @context, timestamp) if @background.ready
+      

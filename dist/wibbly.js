@@ -381,28 +381,28 @@
       video.addEventListener('playing', function() {
         return _this.setReady();
       });
-      video.attributes.setNamedItem(this.createAttribute('poster', "" + baseurl + ".jpg"));
-      video.attributes.setNamedItem(this.createAttribute('loop', 'loop'));
-      video.attributes.setNamedItem(this.createAttribute('autoplay', 'autoplay'));
+      this.setAttribute(video, 'poster', "" + baseurl + ".jpg");
+      this.setAttribute(video, 'autoplay', 'autoplay');
+      this.setAttribute(video, 'loop', 'loop');
       video.appendChild(this.createSource("" + baseurl + ".webm", 'video/webm; codecs="vp8.0, vorbis"'));
       video.appendChild(this.createSource("" + baseurl + ".ogv", 'video/ogg; codecs="theora, vorbis"'));
       video.appendChild(this.createSource("" + baseurl + ".mp4", 'video/mp4; codecs="avc1.4D401E, mp4a.40.2"'));
       return video;
     };
 
+    VideoBackground.prototype.setAttribute = function(element, name, value) {
+      var attr;
+      attr = document.createAttribute(name);
+      attr.value = value;
+      return element.attributes.setNamedItem(attr);
+    };
+
     VideoBackground.prototype.createSource = function(path, type) {
       var source;
       source = document.createElement('source');
-      source.attributes.setNamedItem(this.createAttribute('type', type));
-      source.attributes.setNamedItem(this.createAttribute('src', path));
+      this.setAttribute(source, 'type', type);
+      this.setAttribute(source, 'src', path);
       return source;
-    };
-
-    VideoBackground.prototype.createAttribute = function(name, val) {
-      var attr;
-      attr = document.createAttribute(name);
-      attr.value = val;
-      return attr;
     };
 
     VideoBackground.prototype.detectVideoSupport = function() {
@@ -579,13 +579,22 @@
       if (timestamp == null) {
         timestamp = 0;
       }
-      this.context.globalCompositeOperation = 'source-over';
-      if (this.background.ready) {
-        this.background.renderToCanvas(this.canvas, this.context, timestamp);
+      if (this.compositeSupported) {
+        this.context.globalCompositeOperation = 'source-over';
+        if (this.background.ready) {
+          this.background.renderToCanvas(this.canvas, this.context, timestamp);
+        }
+        this.context.globalCompositeOperation = 'destination-in';
+        this.drawClippingShape(dims);
+        return this.context.fill();
+      } else {
+        this.drawClippingShape(dims);
+        this.context.fill();
+        this.context.clip();
+        if (this.background.ready) {
+          return this.background.renderToCanvas(this.canvas, this.context, timestamp);
+        }
       }
-      this.context.globalCompositeOperation = 'destination-in';
-      this.drawClippingShape(dims);
-      return this.context.fill();
     };
 
     return WibblyElement;
