@@ -192,10 +192,6 @@
       }
     }
 
-    BackgroundTransition.prototype.crappySupport = function() {
-      return typeof Date.now !== 'function';
-    };
-
     BackgroundTransition.prototype.process = function(canvas, context, dimensions, timestamp) {
       if (timestamp === 0) {
         this.finished = true;
@@ -222,6 +218,10 @@
       } else {
         return Date.now();
       }
+    };
+
+    BackgroundTransition.prototype.crappySupport = function() {
+      return typeof Date.now !== 'function';
     };
 
     return BackgroundTransition;
@@ -604,16 +604,15 @@
       if (timestamp == null) {
         timestamp = 0;
       }
-      this.draw(dims, timestamp);
       if (this.needsAnimation()) {
         this.animationRunning = true;
-        console.log("rAFing");
-        return requestAnimationFrame(function(ts) {
+        requestAnimationFrame(function(ts) {
           return _this.animatedDraw(_this.getElementDimensions(_this.element), ts);
         });
       } else {
-        return this.animationRunning = false;
+        this.animationRunning = false;
       }
+      return this.draw(dims, timestamp);
     };
 
     WibblyElement.prototype.drawClippingShape = function(dims) {

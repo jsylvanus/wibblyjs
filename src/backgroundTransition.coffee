@@ -1,6 +1,7 @@
 
 class @BackgroundTransition
 
+
   constructor : (@background, @duration) ->
     @finished = if @duration > 0 then no else yes
     if @crappySupport()
@@ -8,8 +9,6 @@ class @BackgroundTransition
     else
       @start_time = @getSupportedStartTime()
 
-  crappySupport : ->
-    typeof Date.now isnt 'function'
 
   process : (canvas, context, dimensions, timestamp) ->
     if timestamp is 0
@@ -34,6 +33,11 @@ class @BackgroundTransition
 
     context.restore()
     
+
   getSupportedStartTime : ->
     if window.performance.now then performance.now() else Date.now()
+
+
+  crappySupport : ->
+    typeof Date.now isnt 'function'
     

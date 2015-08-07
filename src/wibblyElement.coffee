@@ -101,13 +101,12 @@ class @WibblyElement
 
 
   animatedDraw : (dims, timestamp = 0) ->
-    @draw(dims, timestamp)
     if @needsAnimation()
       @animationRunning = yes
-      console.log "rAFing"
       requestAnimationFrame (ts) => @animatedDraw(@getElementDimensions(@element), ts)
     else
       @animationRunning = no
+    @draw(dims, timestamp)
 
 
   drawClippingShape : (dims) ->
