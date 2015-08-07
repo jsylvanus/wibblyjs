@@ -36,6 +36,10 @@ module.exports = function(grunt) {
 					'build/solidBackground.js',
 					'build/videoBackground.js',
 					'build/wibblyElement.js'
+	    		],
+	    		'dist/wibblytabs.js' : [
+	    			'build/objectcycler.js',
+					'build/wibblyTabs.js'
 	    		]
 	    	}
     	}
