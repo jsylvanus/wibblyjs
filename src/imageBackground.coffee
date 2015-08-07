@@ -4,6 +4,7 @@ class @ImageBackground extends @BackgroundStrategy
 
   constructor: (url) ->
     super()
+    @callback = null
     if typeof url is 'string'
       @image = @createImage(url)
     else if typeof url is 'object' and url instanceof Array

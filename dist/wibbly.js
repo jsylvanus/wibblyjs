@@ -180,6 +180,56 @@
 
 }).call(this);
 ;(function() {
+  this.BackgroundTransition = (function() {
+    function BackgroundTransition(background, duration) {
+      this.background = background;
+      this.duration = duration;
+      this.finished = this.duration > 0 ? false : true;
+      if (this.crappySupport()) {
+        this.finished = true;
+      } else {
+        this.start_time = this.getSupportedStartTime();
+      }
+    }
+
+    BackgroundTransition.prototype.crappySupport = function() {
+      return typeof Date.now !== 'function';
+    };
+
+    BackgroundTransition.prototype.process = function(canvas, context, dimensions, timestamp) {
+      if (timestamp === 0) {
+        this.finished = true;
+      }
+      if (!this.background.ready) {
+        this.start_time = timestamp;
+        return;
+      }
+      context.save();
+      if (timestamp > this.start_time + this.duration) {
+        this.finished = true;
+        context.globalAlpha = 1.0;
+      } else {
+        context.globalAlpha = (timestamp - this.start_time) / this.duration;
+      }
+      context.globalCompositeOperation = 'source-atop';
+      this.background.renderToCanvas(canvas, context, timestamp);
+      return context.restore();
+    };
+
+    BackgroundTransition.prototype.getSupportedStartTime = function() {
+      if (window.performance.now) {
+        return performance.now();
+      } else {
+        return Date.now();
+      }
+    };
+
+    return BackgroundTransition;
+
+  })();
+
+}).call(this);
+;(function() {
   this.BackgroundStrategy = (function() {
     BackgroundStrategy.Factory = function(attribute_string) {
       var error, segments;
@@ -223,6 +273,7 @@
     function BackgroundStrategy() {
       this.ready = false;
       this.requiresRedrawing = false;
+      this.callback = null;
     }
 
     BackgroundStrategy.prototype.getDimensions = function(element) {
@@ -257,6 +308,7 @@
 
     function ImageBackground(url) {
       ImageBackground.__super__.constructor.call(this);
+      this.callback = null;
       if (typeof url === 'string') {
         this.image = this.createImage(url);
       } else if (typeof url === 'object' && url instanceof Array) {
@@ -447,10 +499,9 @@
     function WibblyElement(element) {
       this.element = element;
       this.isFirstAnimation = true;
+      this.transitions = [];
       this.compositeSupported = this.isCompositeSupported();
-      if (this.compositeSupported) {
-        console.log("Composite Supported");
-      }
+      this.animationRunning = false;
       this.element.style.position = 'relative';
       this.top = this.loadBezier(this.element, 'data-top');
       this.bottom = this.loadBezier(this.element, 'data-bottom');
@@ -490,8 +541,7 @@
       }
       this.background = BackgroundStrategy.Factory(attribute.value);
       return this.background.setCallback(function() {
-        _this.adjustCanvas(_this.isFirstAnimation);
-        return _this.isFirstAnimation = false;
+        return _this.adjustCanvas();
       });
     };
 
@@ -524,11 +574,8 @@
       });
     };
 
-    WibblyElement.prototype.adjustCanvas = function(first_call) {
+    WibblyElement.prototype.adjustCanvas = function() {
       var dims, height, width;
-      if (first_call == null) {
-        first_call = false;
-      }
       dims = this.getElementDimensions(this.element);
       this.canvas.style.top = "" + dims.topMargin + "px";
       height = Math.abs(dims.topMargin) + Math.abs(dims.bottomMargin) + dims.height;
@@ -537,11 +584,19 @@
       width = dims.width;
       this.canvas.width = width;
       this.canvas.style.width = "" + width + "px";
-      if (first_call && this.background.requiresRedrawing) {
+      if (!this.animationRunning) {
         return this.animatedDraw(dims, 0);
-      } else {
-        return this.draw(dims, 0);
       }
+    };
+
+    WibblyElement.prototype.needsAnimation = function() {
+      if (this.background.requiresRedrawing) {
+        return true;
+      }
+      if (this.transitions.length > 0) {
+        return true;
+      }
+      return false;
     };
 
     WibblyElement.prototype.animatedDraw = function(dims, timestamp) {
@@ -550,9 +605,15 @@
         timestamp = 0;
       }
       this.draw(dims, timestamp);
-      return requestAnimationFrame(function(ts) {
-        return _this.animatedDraw(_this.getElementDimensions(_this.element), ts);
-      });
+      if (this.needsAnimation()) {
+        this.animationRunning = true;
+        console.log("rAFing");
+        return requestAnimationFrame(function(ts) {
+          return _this.animatedDraw(_this.getElementDimensions(_this.element), ts);
+        });
+      } else {
+        return this.animationRunning = false;
+      }
     };
 
     WibblyElement.prototype.drawClippingShape = function(dims) {
@@ -581,9 +642,11 @@
       }
       if (this.compositeSupported) {
         this.context.globalCompositeOperation = 'source-over';
+        this.context.globalAlpha = 1.0;
         if (this.background.ready) {
           this.background.renderToCanvas(this.canvas, this.context, timestamp);
         }
+        this.processTransitions(dims, timestamp);
         this.context.globalCompositeOperation = 'destination-in';
         this.drawClippingShape(dims);
         return this.context.fill();
@@ -592,9 +655,57 @@
         this.context.fill();
         this.context.clip();
         if (this.background.ready) {
-          return this.background.renderToCanvas(this.canvas, this.context, timestamp);
+          this.background.renderToCanvas(this.canvas, this.context, timestamp);
+        }
+        return this.processTransitions(dims, timestamp);
+      }
+    };
+
+    WibblyElement.prototype.processTransitions = function(dimensions, timestamp) {
+      var old_required_animation, transition, _i, _len, _ref;
+      if (timestamp === 0) {
+        return;
+      }
+      _ref = this.transitions;
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        transition = _ref[_i];
+        transition.process(this.canvas, this.context, dimensions, timestamp);
+      }
+      old_required_animation = this.background.requiresRedrawing;
+      while (true) {
+        if (this.transitions.length === 0) {
+          break;
+        }
+        if (this.transitions[this.transitions.length - 1].finished) {
+          this.background = this.transitions.pop().background;
+        } else {
+          break;
         }
       }
+      if (!old_required_animation && this.background.requiresRedrawing) {
+        return this.adjustCanvas();
+      }
+    };
+
+    WibblyElement.prototype.changeBackground = function(backgroundString, duration) {
+      var error, new_background, transition;
+      if (duration == null) {
+        duration = 0;
+      }
+      try {
+        new_background = BackgroundStrategy.Factory(backgroundString);
+      } catch (_error) {
+        error = _error;
+        console.log(error);
+        return;
+      }
+      if (duration === 0) {
+        this.background = new_background;
+      } else {
+        transition = new BackgroundTransition(new_background, duration);
+        this.transitions.unshift(transition);
+      }
+      return this.adjustCanvas();
     };
 
     return WibblyElement;

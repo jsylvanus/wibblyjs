@@ -40,6 +40,7 @@ class @BackgroundStrategy
   constructor : ->
     @ready = no
     @requiresRedrawing = no
+    @callback = null
 
   
   # constructs a Dimensions object representing the element's width/height

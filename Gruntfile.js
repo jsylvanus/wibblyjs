@@ -30,6 +30,7 @@ module.exports = function(grunt) {
 					'build/vector.js',
 					'build/dimensions.js',
 					'build/scalableBezier.js',
+					'build/backgroundTransition.js',
 					'build/backgroundStrategy.js',
 					'build/imageBackground.js',
 					'build/solidBackground.js',
