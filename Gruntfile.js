@@ -48,7 +48,8 @@ module.exports = function(grunt) {
     uglify : {
     	dist : {
     		files : {
-    			'dist/wibbly.min.js' : [ 'dist/wibbly.js' ]
+    			'dist/wibbly.min.js' : [ 'dist/wibbly.js' ],
+    			'dist/wibblytabs.min.js' : [ 'dist/wibblytabs.js' ]
     		}
     	}
     },
