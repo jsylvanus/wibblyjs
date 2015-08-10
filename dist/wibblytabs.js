@@ -138,19 +138,22 @@
 ;(function() {
   this.WibblyTabs = (function() {
     function WibblyTabs($, wibblyContainer) {
-      var self;
+      var self,
+        _this = this;
       this.$ = $;
       this.wibblyContainer = wibblyContainer;
       this.tabs = this.wibblyContainer.find('.wibbly-tab');
       self = this;
       this.tabs.each(function(idx, el) {
-        this.data('wibblytabs', self);
-        return this.data('tabindex', idx);
+        _this.$(el).data('wibblytabs', _this);
+        return _this.$(el).data('tabindex', idx);
       });
-      this.tabs.on('click', function() {
+      this.tabs.on('click', function(evt) {
         var wibblyTabsObj;
-        wibblyTabsObj = this.data('wibblytabs');
-        return wibblyTabsObj.setTab(this.data('tabindex'));
+        evt.stopPropagation();
+        evt.preventDefault();
+        wibblyTabsObj = self.$(this).data('wibblytabs');
+        return wibblyTabsObj.setTab(self.$(this).data('tabindex'));
       });
       this.wibbly = new WibblyElement(this.wibblyContainer.get(0));
       this.contentContainer = this.wibblyContainer.find('.tab-content');
@@ -167,7 +170,7 @@
       this.contentContainer.empty().append(this.currentElement);
       this.wibbly.adjustCanvas();
       imagedata = this.currentElement.data('background');
-      return this.wibbly.changeBackground("image " + imagedata, 1000);
+      return this.wibbly.changeBackground(imagedata, 1000);
     };
 
     return WibblyTabs;

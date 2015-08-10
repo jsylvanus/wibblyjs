@@ -7,13 +7,15 @@ class @WibblyTabs
     @tabs = @wibblyContainer.find('.wibbly-tab')
 
     self = @
-    @tabs.each (idx, el) ->
-      @.data('wibblytabs', self)
-      @.data('tabindex', idx)
+    @tabs.each (idx, el) =>
+      @$(el).data('wibblytabs', @)
+      @$(el).data('tabindex', idx)
 
-    @tabs.on 'click', ->
-      wibblyTabsObj = @.data 'wibblytabs'
-      wibblyTabsObj.setTab @.data('tabindex')
+    @tabs.on 'click', (evt) ->
+      evt.stopPropagation()
+      evt.preventDefault()
+      wibblyTabsObj = self.$(@).data 'wibblytabs'
+      wibblyTabsObj.setTab self.$(@).data('tabindex')
 
     # construct wibblyElement
     @wibbly = new WibblyElement( @wibblyContainer.get(0) )
@@ -37,4 +39,4 @@ class @WibblyTabs
     
     # set new background on wibblyElement
     imagedata = @currentElement.data 'background'
-    @wibbly.changeBackground "image #{imagedata}", 1000
+    @wibbly.changeBackground imagedata, 1000
