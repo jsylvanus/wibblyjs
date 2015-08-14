@@ -10,7 +10,15 @@
     }
 
     Vector.prototype.clone = function() {
-      return new Object(this);
+      return (function(func, args, ctor) {
+        ctor.prototype = func.prototype;
+        var child = new ctor, result = func.apply(child, args);
+        return Object(result) === result ? result : child;
+      })(Vector, this.values, function(){});
+    };
+
+    Vector.prototype.reverse = function() {
+      return this.scale(-1);
     };
 
     Vector.prototype.scale = function(scalar) {
@@ -24,6 +32,21 @@
       return this.values = this.values.map(function(x) {
         return x * scalar;
       });
+    };
+
+    Vector.prototype.equals = function(other) {
+      var idx, val, _i, _len, _ref;
+      if (other.values.length !== this.values.length) {
+        return false;
+      }
+      _ref = this.values;
+      for (idx = _i = 0, _len = _ref.length; _i < _len; idx = ++_i) {
+        val = _ref[idx];
+        if (other.values[idx] !== val) {
+          return false;
+        }
+      }
+      return true;
     };
 
     Vector.prototype.x = function() {
@@ -54,9 +77,28 @@
 }).call(this);
 ;(function() {
   this.Dimensions = (function() {
+    Dimensions.FromVector = function(vec) {
+      return new Dimensions(vec.x(), vec.y());
+    };
+
     function Dimensions(width, height) {
       this.vector = new Vector(width, height);
     }
+
+    Dimensions.prototype.equals = function(dOther) {
+      return this.vector.equals(dOther.vector);
+    };
+
+    Dimensions.prototype.scale = function(factor) {
+      var box;
+      box = new Dimensions(this.vector.x(), this.vector.y());
+      box.mutableScale(factor);
+      return box;
+    };
+
+    Dimensions.prototype.mutableScale = function(factor) {
+      return this.vector.mutScale(factor);
+    };
 
     Dimensions.prototype.width = function() {
       return this.vector.x();
@@ -66,13 +108,20 @@
       return this.vector.y();
     };
 
-    Dimensions.prototype.scaleToFit = function(other) {
-      var newVec, ratio, ratio_x, ratio_y;
+    Dimensions.prototype.scaleToFill = function(other) {
+      var ratio, ratio_x, ratio_y;
       ratio_x = other.width() / this.width();
       ratio_y = other.height() / this.height();
       ratio = ratio_x > ratio_y ? ratio_x : ratio_y;
-      newVec = this.vector.scale(ratio);
-      return new Dimensions(newVec.x(), newVec.y());
+      return Dimensions.FromVector(this.vector.scale(ratio));
+    };
+
+    Dimensions.prototype.scaleToFit = function(other) {
+      var ratio, ratio_x, ratio_y;
+      ratio_x = other.width() / this.width();
+      ratio_y = other.height() / this.height();
+      ratio = ratio_x < ratio_y ? ratio_x : ratio_y;
+      return Dimensions.FromVector(this.vector.scale(ratio));
     };
 
     Dimensions.prototype.centerOffset = function(other) {
@@ -271,6 +320,7 @@
     };
 
     function BackgroundStrategy() {
+      this.lastBox = null;
       this.ready = false;
       this.requiresRedrawing = false;
       this.callback = null;
@@ -281,6 +331,35 @@
         return new Dimensions(element.videoWidth, element.videoHeight);
       }
       return new Dimensions(element.width, element.height);
+    };
+
+    BackgroundStrategy.prototype.sourceBox = function(dCanvas, dSource) {
+      var offset, scaledCanvasBox;
+      scaledCanvasBox = dCanvas.scaleToFit(dSource);
+      offset = scaledCanvasBox.centerOffset(dSource);
+      console.log(scaledCanvasBox, offset);
+      return {
+        source: {
+          x: Math.floor(offset.x()),
+          y: Math.floor(offset.y())
+        },
+        dims: {
+          width: Math.floor(scaledCanvasBox.width()),
+          height: Math.floor(scaledCanvasBox.height())
+        }
+      };
+    };
+
+    BackgroundStrategy.prototype.getRenderBox = function(dCanvas, sourceElement) {
+      var box, imageDims;
+      if (this.lastBox !== null && dCanvas.equals(this.lastDims)) {
+        box = this.lastBox;
+      } else {
+        this.lastDims = dCanvas;
+        imageDims = this.getDimensions(sourceElement);
+        box = this.lastBox = this.sourceBox(dCanvas, imageDims);
+      }
+      return box;
     };
 
     BackgroundStrategy.prototype.renderToCanvas = function(element, context, dTime) {
@@ -319,7 +398,7 @@
     }
 
     ImageBackground.prototype.renderToCanvas = function(element, context, dTime) {
-      var dims, imageDims, offset, scaledDims;
+      var box, dims;
       if (dTime == null) {
         dTime = 0;
       }
@@ -327,10 +406,8 @@
         return;
       }
       dims = this.getDimensions(element);
-      imageDims = this.getDimensions(this.image);
-      scaledDims = imageDims.scaleToFit(dims);
-      offset = scaledDims.centerOffset(dims);
-      return context.drawImage(this.image, offset.x(), offset.y(), scaledDims.width(), scaledDims.height());
+      box = this.getRenderBox(dims, this.imageCanvas);
+      return context.drawImage(this.imageContext.canvas, box.source.x, box.source.y, box.dims.width, box.dims.height, 0, 0, dims.vector.values[0], dims.vector.values[1]);
     };
 
     ImageBackground.prototype.createSrcSetImage = function(values) {
@@ -359,7 +436,18 @@
       return img;
     };
 
+    ImageBackground.prototype.createCanvasSource = function() {
+      var dims;
+      dims = this.getDimensions(this.image);
+      this.imageCanvas = document.createElement('canvas');
+      this.imageCanvas.width = dims.width();
+      this.imageCanvas.height = dims.height();
+      this.imageContext = this.imageCanvas.getContext('2d');
+      return this.imageContext.drawImage(this.image, 0, 0);
+    };
+
     ImageBackground.prototype.setReady = function() {
+      this.createCanvasSource();
       this.ready = true;
       if (this.callback !== null) {
         return this.callback();
@@ -464,7 +552,7 @@
     };
 
     VideoBackground.prototype.renderToCanvas = function(element, context, dTime) {
-      var dims, imageDims, offset, scaledDims;
+      var box, dims;
       if (dTime == null) {
         dTime = 0;
       }
@@ -472,10 +560,8 @@
         return;
       }
       dims = this.getDimensions(element);
-      imageDims = this.getDimensions(this.video);
-      scaledDims = imageDims.scaleToFit(dims);
-      offset = scaledDims.centerOffset(dims);
-      return context.drawImage(this.video, offset.x(), offset.y(), scaledDims.width(), scaledDims.height());
+      box = this.getRenderBox(dims, this.video);
+      return context.drawImage(this.video, box.source.x, box.source.y, box.dims.width, box.dims.height, 0, 0, dims.vector.values[0], dims.vector.values[1]);
     };
 
     VideoBackground.prototype.setReady = function() {
@@ -498,6 +584,8 @@
   this.WibblyElement = (function() {
     function WibblyElement(element) {
       this.element = element;
+      this.lastDims = null;
+      this.clipCanvas = null;
       this.isFirstAnimation = true;
       this.transitions = [];
       this.compositeSupported = this.isCompositeSupported();
@@ -615,24 +703,46 @@
       return this.draw(dims, timestamp);
     };
 
-    WibblyElement.prototype.drawClippingShape = function(dims) {
+    WibblyElement.prototype.updateClippingCanvas = function(dims) {
       var bottomBezier, topBezier;
-      this.context.beginPath();
+      this.clipCanvas.width = dims.width;
+      this.clipCanvas.height = dims.height + Math.abs(dims.topMargin) + Math.abs(dims.bottomMargin);
+      this.clipContext.clearRect(0, 0, this.clipCanvas.width, this.clipCanvas.height);
+      this.clipContext.beginPath();
       if (this.top !== null) {
         topBezier = this.top.scale(dims.width, Math.abs(dims.topMargin));
-        this.context.moveTo(topBezier.startX, topBezier.startY);
-        topBezier.applyToCanvas(this.context);
+        this.clipContext.moveTo(topBezier.startX, topBezier.startY);
+        topBezier.applyToCanvas(this.clipContext);
       } else {
-        this.context.moveTo(0, 0);
-        this.context.lineTo(dims.width, 0);
+        this.clipContext.moveTo(0, 0);
+        this.clipContext.lineTo(dims.width, 0);
       }
       if (this.bottom !== null) {
         bottomBezier = this.bottom.scale(dims.width, Math.abs(dims.bottomMargin)).reverse();
-        return bottomBezier.applyToCanvas(this.context, 0, dims.height + Math.abs(dims.topMargin));
+        bottomBezier.applyToCanvas(this.clipContext, 0, dims.height + Math.abs(dims.topMargin));
       } else {
-        this.context.lineTo(dims.width, dims.height + Math.abs(dims.topMargin) + Math.abs(dims.bottomMargin));
-        return this.context.lineTo(0, dims.height + Math.abs(dims.topMargin) + Math.abs(dims.bottomMargin));
+        this.clipContext.lineTo(dims.width, dims.height + Math.abs(dims.topMargin) + Math.abs(dims.bottomMargin));
+        this.clipContext.lineTo(0, dims.height + Math.abs(dims.topMargin) + Math.abs(dims.bottomMargin));
       }
+      return this.clipContext.fill();
+    };
+
+    WibblyElement.prototype.drawClippingShape = function(dims) {
+      var vDims;
+      vDims = new Vector(dims.width, dims.height + Math.abs(dims.topMargin) + Math.abs(dims.bottomMargin));
+      if (this.clipCanvas === null) {
+        this.clipCanvas = document.createElement('canvas');
+        this.clipCanvas.width = dims.width;
+        this.clipCanvas.height = dims.height;
+        this.clipContext = this.clipCanvas.getContext('2d');
+        this.updateClippingCanvas(dims);
+        this.lastDims = vDims;
+      }
+      if (!vDims.equals(this.lastDims)) {
+        this.updateClippingCanvas(dims);
+        this.lastDims = vDims;
+      }
+      return this.context.drawImage(this.clipContext.canvas, 0, 0, vDims.values[0], vDims.values[1]);
     };
 
     WibblyElement.prototype.draw = function(dims, timestamp) {
@@ -647,12 +757,8 @@
         }
         this.processTransitions(dims, timestamp);
         this.context.globalCompositeOperation = 'destination-in';
-        this.drawClippingShape(dims);
-        return this.context.fill();
+        return this.drawClippingShape(dims);
       } else {
-        this.drawClippingShape(dims);
-        this.context.fill();
-        this.context.clip();
         if (this.background.ready) {
           this.background.renderToCanvas(this.canvas, this.context, timestamp);
         }
@@ -662,6 +768,9 @@
 
     WibblyElement.prototype.processTransitions = function(dimensions, timestamp) {
       var old_required_animation, transition, _i, _len, _ref;
+      if (this.transitions.length === 0) {
+        return;
+      }
       if (timestamp === 0) {
         return;
       }

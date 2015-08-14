@@ -45,12 +45,12 @@ class @VideoBackground extends @BackgroundStrategy
     return if not @ready
 
     dims = @getDimensions element
-    imageDims = @getDimensions @video
+    box = @getRenderBox(dims, @video)
+    
+    # console.log box, dims
+    context.drawImage(@video, box.source.x, box.source.y, box.dims.width, box.dims.height, 0, 0, dims.vector.values[0], dims.vector.values[1])
 
-    scaledDims = imageDims.scaleToFit(dims)
-    offset = scaledDims.centerOffset(dims)
-
-    context.drawImage(@video, offset.x(), offset.y(), scaledDims.width(), scaledDims.height())
+    # context.drawImage(@video, offset.x(), offset.y(), scaledDims.width(), scaledDims.height())
     
 
   # toggles @ready and fires @callback if it's been set

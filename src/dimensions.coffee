@@ -3,11 +3,22 @@
 
 class @Dimensions
   
+  @FromVector : (vec) ->
+    new Dimensions vec.x(), vec.y()
 
   # the box is basically just a vector
   constructor: (width, height) ->
     @vector = new Vector(width, height)
 
+  equals: (dOther) -> @vector.equals(dOther.vector)
+
+  scale : (factor) ->
+    box = new Dimensions(@vector.x(), @vector.y())
+    box.mutableScale(factor)
+    box
+
+  mutableScale : (factor) ->
+    @vector.mutScale(factor)
 
   # access x as width
   width : -> @vector.x()
@@ -20,12 +31,18 @@ class @Dimensions
   # Scales this box to fit (fill, actually) another box.
   # returns a new Dimensions obj
   # TODO: refactor name
-  scaleToFit : (other) ->
+  scaleToFill : (other) ->
     ratio_x = other.width() / @width()
     ratio_y = other.height() / @height()
     ratio = if ratio_x > ratio_y then ratio_x else ratio_y
-    newVec = @vector.scale(ratio)
-    new Dimensions newVec.x(), newVec.y()
+    Dimensions.FromVector( @vector.scale(ratio) )
+
+
+  scaleToFit : (other) ->
+    ratio_x = other.width() / @width()
+    ratio_y = other.height() / @height()
+    ratio = if ratio_x < ratio_y then ratio_x else ratio_y
+    Dimensions.FromVector( @vector.scale(ratio) )
 
 
   # Given another box, get the coordinates needed to center this box within the other.

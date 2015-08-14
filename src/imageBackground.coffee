@@ -21,12 +21,9 @@ class @ImageBackground extends @BackgroundStrategy
     return if not @ready
 
     dims = @getDimensions element
-    imageDims = @getDimensions @image
+    box = @getRenderBox(dims, @imageCanvas)
 
-    scaledDims = imageDims.scaleToFit(dims)
-    offset = scaledDims.centerOffset(dims)
-
-    context.drawImage(@image, offset.x(), offset.y(), scaledDims.width(), scaledDims.height())
+    context.drawImage(@imageContext.canvas, box.source.x, box.source.y, box.dims.width, box.dims.height, 0, 0, dims.vector.values[0], dims.vector.values[1])
 
 
   createSrcSetImage: (values) ->
@@ -48,9 +45,17 @@ class @ImageBackground extends @BackgroundStrategy
     img.src = url
     img
     
+  createCanvasSource : ->
+    dims = @getDimensions @image
+    @imageCanvas = document.createElement('canvas')
+    @imageCanvas.width = dims.width()
+    @imageCanvas.height = dims.height()
+    @imageContext = @imageCanvas.getContext('2d')
+    @imageContext.drawImage @image, 0, 0
 
   # toggles @ready and fires @callback if it's been set
   setReady : ->
+    @createCanvasSource()
     @ready = yes
     @callback() if @callback isnt null
 

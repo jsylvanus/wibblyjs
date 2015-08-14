@@ -38,6 +38,7 @@ class @BackgroundStrategy
 
   
   constructor : ->
+    @lastBox = null
     @ready = no
     @requiresRedrawing = no
     @callback = null
@@ -48,6 +49,28 @@ class @BackgroundStrategy
   getDimensions : (element) ->
     return new Dimensions(element.videoWidth, element.videoHeight) if element instanceof HTMLVideoElement
     new Dimensions(element.width, element.height)
+
+  sourceBox : (dCanvas, dSource) ->
+    scaledCanvasBox = dCanvas.scaleToFit(dSource)
+    offset = scaledCanvasBox.centerOffset(dSource)
+
+    console.log scaledCanvasBox, offset
+
+    source:
+      x: Math.floor(offset.x())
+      y: Math.floor(offset.y())
+    dims:
+      width: Math.floor(scaledCanvasBox.width())
+      height: Math.floor(scaledCanvasBox.height())
+
+  getRenderBox : (dCanvas, sourceElement) ->
+    if @lastBox isnt null and dCanvas.equals(@lastDims)
+      box = @lastBox
+    else
+      @lastDims = dCanvas
+      imageDims = @getDimensions sourceElement
+      box = @lastBox = @sourceBox(dCanvas, imageDims)
+    box
 
   # the following are intended to be overridden by subclasses
 

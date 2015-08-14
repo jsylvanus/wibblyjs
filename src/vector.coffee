@@ -12,8 +12,9 @@ class @Vector
 
   # TODO: Maybe make a better version? this won't catch nested objects, should 
   # that ever be required by the class. Not needed for now.
-  clone : -> new Object(@)
+  clone : -> new Vector(@values...)
     
+  reverse : -> @scale(-1)
 
   # multiplies all values in vector and returns the new result
   scale : (scalar) ->
@@ -26,6 +27,11 @@ class @Vector
   mutScale : (scalar) ->
     @values = @values.map (x) -> x * scalar
 
+  equals : (other) ->
+    return false if other.values.length != @values.length
+    for val, idx in @values
+      return false if other.values[idx] != val
+    true
 
   # named accessors...
   

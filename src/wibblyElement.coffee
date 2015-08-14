@@ -2,6 +2,8 @@
 class @WibblyElement
   
   constructor: (@element) ->
+    @lastDims = null
+    @clipCanvas = null
     @isFirstAnimation = yes
     @transitions = []
     @compositeSupported = @isCompositeSupported()
@@ -108,30 +110,55 @@ class @WibblyElement
       @animationRunning = no
     @draw(dims, timestamp)
 
+  updateClippingCanvas : (dims) ->
+    @clipCanvas.width = dims.width
+    @clipCanvas.height = dims.height + Math.abs(dims.topMargin) + Math.abs(dims.bottomMargin)
+    @clipContext.clearRect 0, 0, @clipCanvas.width, @clipCanvas.height
 
-  drawClippingShape : (dims) ->
-    @context.beginPath()
+    @clipContext.beginPath()
 
     # if top bezier exists, apply to canvas, else just draw the surrounding box points
     if @top isnt null
       topBezier = @top.scale(dims.width, Math.abs(dims.topMargin))
-      @context.moveTo(topBezier.startX, topBezier.startY)
-      topBezier.applyToCanvas(@context)
+      @clipContext.moveTo(topBezier.startX, topBezier.startY)
+      topBezier.applyToCanvas(@clipContext)
     else
-      @context.moveTo(0,0)
-      @context.lineTo(dims.width, 0)
+      @clipContext.moveTo(0,0)
+      @clipContext.lineTo(dims.width, 0)
 
     # if bottom bezier exists, apply to canvas, else just draw the surrounding box points
     if @bottom isnt null
       bottomBezier = @bottom.scale(dims.width, Math.abs(dims.bottomMargin)).reverse()
-      bottomBezier.applyToCanvas(@context, 0, dims.height + Math.abs(dims.topMargin))
+      bottomBezier.applyToCanvas(@clipContext, 0, dims.height + Math.abs(dims.topMargin))
     else
-      @context.lineTo(dims.width, dims.height + Math.abs(dims.topMargin) + Math.abs(dims.bottomMargin))
-      @context.lineTo(0, dims.height + Math.abs(dims.topMargin) + Math.abs(dims.bottomMargin))
+      @clipContext.lineTo(dims.width, dims.height + Math.abs(dims.topMargin) + Math.abs(dims.bottomMargin))
+      @clipContext.lineTo(0, dims.height + Math.abs(dims.topMargin) + Math.abs(dims.bottomMargin))
 
-    # @context.closePath()
-    # @context.fill()
-    # @context.clip() # treat the above drawing as a clipping mask for the background
+    @clipContext.fill()
+    #
+    # @clipContext.closePath()
+    # @clipContext.clip() # treat the above drawing as a clipping mask for the background
+
+  drawClippingShape : (dims) ->
+    
+    vDims = new Vector(dims.width, dims.height + Math.abs(dims.topMargin) + Math.abs(dims.bottomMargin))
+
+    # create clipping canvas
+    if @clipCanvas is null
+      @clipCanvas = document.createElement('canvas')
+      @clipCanvas.width = dims.width
+      @clipCanvas.height = dims.height
+      @clipContext = @clipCanvas.getContext('2d')
+      @updateClippingCanvas(dims)
+      @lastDims = vDims
+
+    if not vDims.equals(@lastDims)
+      @updateClippingCanvas(dims)
+      @lastDims = vDims
+
+    @context.drawImage(@clipContext.canvas, 0, 0, vDims.values[0], vDims.values[1])
+    
+
 
 
   # Draws the bezier mask and background
@@ -150,14 +177,14 @@ class @WibblyElement
       # then mask it via destination-in compositing (much faster than clipping video)
       @context.globalCompositeOperation = 'destination-in'
       @drawClippingShape(dims)
-      @context.fill()
 
     else # slow version
 
       # draw the clipping mask
-      @drawClippingShape(dims)
-      @context.fill()
-      @context.clip()
+      # NO CLIPPING WITHOUT COMPOSITE
+      # @drawClippingShape(dims)
+      # @context.fill()
+      # @context.clip()
 
       # draw the background into the clipping region
       @background.renderToCanvas(@canvas, @context, timestamp) if @background.ready
@@ -168,6 +195,7 @@ class @WibblyElement
 
   processTransitions : (dimensions, timestamp) ->
     # TODO: Transitioning to a video background is glitchy at end of transition
+    return if @transitions.length is 0
     return if timestamp is 0
 
     for transition in @transitions
