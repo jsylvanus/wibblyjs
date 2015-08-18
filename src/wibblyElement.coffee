@@ -137,7 +137,6 @@ class @WibblyElement
   updateClippingCanvas : (dims) ->
     @clipCanvas.width = dims.width
     @clipCanvas.height = dims.height + Math.abs(dims.topMargin) + Math.abs(dims.bottomMargin)
-    @clipContext.clearRect 0, 0, @clipCanvas.width, @clipCanvas.height
 
     @clipContext.beginPath()
 
@@ -158,10 +157,8 @@ class @WibblyElement
       @clipContext.lineTo(dims.width, dims.height + Math.abs(dims.topMargin) + Math.abs(dims.bottomMargin))
       @clipContext.lineTo(0, dims.height + Math.abs(dims.topMargin) + Math.abs(dims.bottomMargin))
 
+    @clipContext.closePath()
     @clipContext.fill()
-    #
-    # @clipContext.closePath()
-    # @clipContext.clip() # treat the above drawing as a clipping mask for the background
 
   drawClippingShape : (dims) ->
     
@@ -184,8 +181,6 @@ class @WibblyElement
     @context.globalCompositeOperation = 'destination-in'
     @context.drawImage(@clipContext.canvas, 0, 0, vDims.values[0], vDims.values[1])
     @context.restore()
-    
-
 
 
   # Draws the bezier mask and background
@@ -210,12 +205,10 @@ class @WibblyElement
       #====== v2
 
       @background.renderToCanvas(@canvas, @context, timestamp) if @background.ready
-      
-      # then mask it via destination-in compositing (much faster than clipping video)
       @drawClippingShape(dims)
 
       # handle transitions
-      @processTransitions dims, timestamp
+#      @processTransitions dims, timestamp
 
 
     else # slow version

@@ -737,7 +737,6 @@
       var bottomBezier, topBezier;
       this.clipCanvas.width = dims.width;
       this.clipCanvas.height = dims.height + Math.abs(dims.topMargin) + Math.abs(dims.bottomMargin);
-      this.clipContext.clearRect(0, 0, this.clipCanvas.width, this.clipCanvas.height);
       this.clipContext.beginPath();
       if (this.top !== null) {
         topBezier = this.top.scale(dims.width, Math.abs(dims.topMargin));
@@ -754,6 +753,7 @@
         this.clipContext.lineTo(dims.width, dims.height + Math.abs(dims.topMargin) + Math.abs(dims.bottomMargin));
         this.clipContext.lineTo(0, dims.height + Math.abs(dims.topMargin) + Math.abs(dims.bottomMargin));
       }
+      this.clipContext.closePath();
       return this.clipContext.fill();
     };
 
@@ -788,7 +788,6 @@
           this.background.renderToCanvas(this.canvas, this.context, timestamp);
         }
         this.drawClippingShape(dims);
-        this.processTransitions(dims, timestamp);
       } else {
         if (this.background.ready) {
           this.background.renderToCanvas(this.canvas, this.context, timestamp);
