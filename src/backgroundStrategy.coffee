@@ -54,8 +54,6 @@ class @BackgroundStrategy
     scaledCanvasBox = dCanvas.scaleToFit(dSource)
     offset = scaledCanvasBox.centerOffset(dSource)
 
-    console.log scaledCanvasBox, offset
-
     source:
       x: Math.floor(offset.x())
       y: Math.floor(offset.y())

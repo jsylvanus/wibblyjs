@@ -337,7 +337,6 @@
       var offset, scaledCanvasBox;
       scaledCanvasBox = dCanvas.scaleToFit(dSource);
       offset = scaledCanvasBox.centerOffset(dSource);
-      console.log(scaledCanvasBox, offset);
       return {
         source: {
           x: Math.floor(offset.x()),
@@ -581,13 +580,19 @@
 
 }).call(this);
 ;(function() {
+  var __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
+
   this.WibblyElement = (function() {
     function WibblyElement(element) {
       this.element = element;
+      this.animatedDraw = __bind(this.animatedDraw, this);
       this.lastDims = null;
+      this.drawing = false;
+      this.adjusting = false;
       this.clipCanvas = null;
       this.isFirstAnimation = true;
       this.transitions = [];
+      this.polyfillRAF();
       this.compositeSupported = this.isCompositeSupported();
       this.animationRunning = false;
       this.element.style.position = 'relative';
@@ -598,6 +603,12 @@
       this.hookEvents();
       this.adjustCanvas();
     }
+
+    WibblyElement.prototype.polyfillRAF = function() {
+      return window.requestAnimationFrame = window.requestAnimationFrame || window.webkitRequestAnimationFrame || window.mozRequestAnimationFrame || (function(callback) {
+        return window.setTimeout(callback, 1000 / 60);
+      });
+    };
 
     WibblyElement.prototype.isCompositeSupported = function() {
       var ctx, test;
@@ -640,7 +651,8 @@
       this.canvas.style.top = 0;
       this.canvas.style.zIndex = -1;
       this.context = this.canvas.getContext('2d');
-      this.context.globalCompositeOperation = 'destination-in';
+      this.context.globalCompositeOperation = 'source-over';
+      this.context.save();
       return this.element.appendChild(this.canvas);
     };
 
@@ -648,17 +660,35 @@
       var style;
       style = element.currentStyle || window.getComputedStyle(element);
       return {
-        width: element.offsetWidth,
-        height: element.offsetHeight,
-        topMargin: parseFloat(style.marginTop),
-        bottomMargin: parseFloat(style.marginBottom)
+        width: Math.ceil(element.offsetWidth),
+        height: Math.ceil(element.offsetHeight),
+        topMargin: Math.ceil(parseFloat(style.marginTop)),
+        bottomMargin: Math.ceil(parseFloat(style.marginBottom))
       };
     };
 
     WibblyElement.prototype.hookEvents = function() {
-      var _this = this;
+      var timeout,
+        _this = this;
+      timeout = null;
       return window.addEventListener('resize', function() {
-        return _this.adjustCanvas();
+        var delayDraw;
+        delayDraw = function() {
+          return setTimeout(function() {
+            if (_this.adjusting) {
+              return timeout = setTimeout(delayDraw, 5);
+            } else {
+              _this.adjusting = true;
+              _this.adjustCanvas();
+              _this.adjusting = false;
+              return timeout = null;
+            }
+          }, 1000 / 30);
+        };
+        if (timeout !== null) {
+          clearTimeout(timeout);
+        }
+        return timeout = delayDraw();
       });
     };
 
@@ -672,6 +702,7 @@
       width = dims.width;
       this.canvas.width = width;
       this.canvas.style.width = "" + width + "px";
+      console.log(dims, this.canvas.style, this.animationRunning);
       if (!this.animationRunning) {
         return this.animatedDraw(dims, 0);
       }
@@ -687,20 +718,19 @@
       return false;
     };
 
-    WibblyElement.prototype.animatedDraw = function(dims, timestamp) {
-      var _this = this;
+    WibblyElement.prototype.animatedDraw = function(timestamp) {
+      var dims;
       if (timestamp == null) {
         timestamp = 0;
       }
+      dims = this.getElementDimensions(this.element);
+      this.draw(dims, timestamp);
       if (this.needsAnimation()) {
         this.animationRunning = true;
-        requestAnimationFrame(function(ts) {
-          return _this.animatedDraw(_this.getElementDimensions(_this.element), ts);
-        });
+        return requestAnimationFrame(this.animatedDraw);
       } else {
-        this.animationRunning = false;
+        return this.animationRunning = false;
       }
-      return this.draw(dims, timestamp);
     };
 
     WibblyElement.prototype.updateClippingCanvas = function(dims) {
@@ -742,28 +772,30 @@
         this.updateClippingCanvas(dims);
         this.lastDims = vDims;
       }
-      return this.context.drawImage(this.clipContext.canvas, 0, 0, vDims.values[0], vDims.values[1]);
+      this.context.save();
+      this.context.globalCompositeOperation = 'destination-in';
+      this.context.drawImage(this.clipContext.canvas, 0, 0, vDims.values[0], vDims.values[1]);
+      return this.context.restore();
     };
 
     WibblyElement.prototype.draw = function(dims, timestamp) {
       if (timestamp == null) {
         timestamp = 0;
       }
+      this.drawing = true;
       if (this.compositeSupported) {
-        this.context.globalCompositeOperation = 'source-over';
-        this.context.globalAlpha = 1.0;
         if (this.background.ready) {
           this.background.renderToCanvas(this.canvas, this.context, timestamp);
         }
+        this.drawClippingShape(dims);
         this.processTransitions(dims, timestamp);
-        this.context.globalCompositeOperation = 'destination-in';
-        return this.drawClippingShape(dims);
       } else {
         if (this.background.ready) {
           this.background.renderToCanvas(this.canvas, this.context, timestamp);
         }
-        return this.processTransitions(dims, timestamp);
+        this.processTransitions(dims, timestamp);
       }
+      return this.drawing = false;
     };
 
     WibblyElement.prototype.processTransitions = function(dimensions, timestamp) {

@@ -3,9 +3,12 @@ class @WibblyElement
   
   constructor: (@element) ->
     @lastDims = null
+    @drawing = false
+    @adjusting = false
     @clipCanvas = null
     @isFirstAnimation = yes
     @transitions = []
+    @polyfillRAF()
     @compositeSupported = @isCompositeSupported()
     @animationRunning = no
     @element.style.position = 'relative'
@@ -16,6 +19,8 @@ class @WibblyElement
     @hookEvents()
     @adjustCanvas()
 
+  polyfillRAF : ->
+    window.requestAnimationFrame = window.requestAnimationFrame or window.webkitRequestAnimationFrame or window.mozRequestAnimationFrame or ((callback) -> window.setTimeout(callback, 1000/60))
 
   isCompositeSupported : ->
     test = document.createElement 'canvas'
@@ -55,7 +60,8 @@ class @WibblyElement
     @canvas.style.zIndex = -1
 
     @context = @canvas.getContext '2d'
-    @context.globalCompositeOperation = 'destination-in'
+    @context.globalCompositeOperation = 'source-over'
+    @context.save()
 
     @element.appendChild @canvas
   
@@ -64,17 +70,32 @@ class @WibblyElement
   getElementDimensions : (element) ->
     style = element.currentStyle || window.getComputedStyle(element)
 
-    width: element.offsetWidth
-    height: element.offsetHeight
-    topMargin: parseFloat(style.marginTop)
-    bottomMargin: parseFloat(style.marginBottom)
+    width: Math.ceil(element.offsetWidth)
+    height: Math.ceil(element.offsetHeight)
+    topMargin: Math.ceil(parseFloat(style.marginTop))
+    bottomMargin: Math.ceil(parseFloat(style.marginBottom))
 
   
   # hooks window resize event
   # TODO: throttle or debouce?
   hookEvents : ->
+    timeout = null
     window.addEventListener 'resize', =>
-      @adjustCanvas()
+      # adjusts canvas only if draw routine not already running
+      delayDraw = => setTimeout( =>
+        if @adjusting
+          timeout = setTimeout( delayDraw, 5 ) # try again in 5ms intervals
+        else
+          @adjusting = true
+          @adjustCanvas()
+          @adjusting = false
+          timeout = null
+      , 1000 / 30 )
+          
+      if timeout isnt null
+        clearTimeout(timeout)
+      
+      timeout = delayDraw()
 
 
   # Adjusts canvas to cover its containing element
@@ -92,6 +113,8 @@ class @WibblyElement
     @canvas.width = width
     @canvas.style.width = "#{width}px"
 
+    console.log dims, @canvas.style, @animationRunning
+
     if not @animationRunning
       @animatedDraw dims, 0
 
@@ -101,14 +124,15 @@ class @WibblyElement
     return yes if @transitions.length > 0
     return no
 
-
-  animatedDraw : (dims, timestamp = 0) ->
+  animatedDraw : (timestamp = 0) =>
+    # console.log "animatedDraw"
+    dims = @getElementDimensions(@element)
+    @draw(dims, timestamp)
     if @needsAnimation()
       @animationRunning = yes
-      requestAnimationFrame (ts) => @animatedDraw(@getElementDimensions(@element), ts)
+      requestAnimationFrame @animatedDraw
     else
       @animationRunning = no
-    @draw(dims, timestamp)
 
   updateClippingCanvas : (dims) ->
     @clipCanvas.width = dims.width
@@ -156,27 +180,43 @@ class @WibblyElement
       @updateClippingCanvas(dims)
       @lastDims = vDims
 
+    @context.save()
+    @context.globalCompositeOperation = 'destination-in'
     @context.drawImage(@clipContext.canvas, 0, 0, vDims.values[0], vDims.values[1])
+    @context.restore()
     
 
 
 
   # Draws the bezier mask and background
   draw : (dims, timestamp = 0) ->
-    
+    # console.log "draw"
+    @drawing = true
     if @compositeSupported # faster composite operation version
       
-      # draw the background first
-      @context.globalCompositeOperation = 'source-over'
-      @context.globalAlpha = 1.0
+      #===== v1
+      # # @context.clearRect(0,0,@canvas.width, @canvas.height)
+      # # draw the background first
+      # @context.globalCompositeOperation = 'source-over'
+      # @background.renderToCanvas(@canvas, @context, timestamp) if @background.ready
+      # 
+      # # handle transitions
+      # @processTransitions dims, timestamp
+
+      # # then mask it via destination-in compositing (much faster than clipping video)
+      # @context.globalCompositeOperation = 'destination-in'
+      # @drawClippingShape(dims)
+
+      #====== v2
+
       @background.renderToCanvas(@canvas, @context, timestamp) if @background.ready
       
+      # then mask it via destination-in compositing (much faster than clipping video)
+      @drawClippingShape(dims)
+
       # handle transitions
       @processTransitions dims, timestamp
 
-      # then mask it via destination-in compositing (much faster than clipping video)
-      @context.globalCompositeOperation = 'destination-in'
-      @drawClippingShape(dims)
 
     else # slow version
 
@@ -191,6 +231,7 @@ class @WibblyElement
 
       # handle transitions
       @processTransitions dims, timestamp
+    @drawing = false
 
 
   processTransitions : (dimensions, timestamp) ->
