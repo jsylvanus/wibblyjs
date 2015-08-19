@@ -330,7 +330,8 @@
     };
 
     BackgroundTransition.prototype.getSupportedStartTime = function() {
-      if (window.performance.now) {
+      var _ref;
+      if (((_ref = window.performance) != null ? _ref.now : void 0) != null) {
         return performance.now();
       } else {
         return Date.now();

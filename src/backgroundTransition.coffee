@@ -35,7 +35,7 @@ class @BackgroundTransition
     
 
   getSupportedStartTime : ->
-    if window.performance.now then performance.now() else Date.now()
+    if window.performance?.now? then performance.now() else Date.now()
 
 
   crappySupport : ->
