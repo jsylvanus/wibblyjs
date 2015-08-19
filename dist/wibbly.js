@@ -585,10 +585,12 @@
   this.WibblyElement = (function() {
     function WibblyElement(element) {
       this.element = element;
+      this.draw = __bind(this.draw, this);
       this.animatedDraw = __bind(this.animatedDraw, this);
       this.lastDims = null;
       this.drawing = false;
       this.adjusting = false;
+      this.adjustTimeout = null;
       this.clipCanvas = null;
       this.isFirstAnimation = true;
       this.transitions = [];
@@ -668,44 +670,46 @@
     };
 
     WibblyElement.prototype.hookEvents = function() {
-      var timeout,
-        _this = this;
-      timeout = null;
+      var _this = this;
       return window.addEventListener('resize', function() {
-        var delayDraw;
-        delayDraw = function() {
-          return setTimeout(function() {
-            if (_this.adjusting) {
-              return timeout = setTimeout(delayDraw, 5);
-            } else {
-              _this.adjusting = true;
-              _this.adjustCanvas();
-              _this.adjusting = false;
-              return timeout = null;
-            }
-          }, 1000 / 30);
-        };
-        if (timeout !== null) {
-          clearTimeout(timeout);
-        }
-        return timeout = delayDraw();
+        return _this.adjustCanvas();
       });
     };
 
     WibblyElement.prototype.adjustCanvas = function() {
-      var dims, height, width;
+      var dims, height, tmpCanvas, tmpContext, width,
+        _this = this;
+      if (this.adjusting === true) {
+        if (this.adjustTimeout !== null) {
+          clearTimeout(this.adjustTimeout);
+          this.adjustTimeout = null;
+        }
+        this.adjustTimeout = setTimeout((function() {
+          return _this.adjustCanvas();
+        }), 1000 / 60);
+        return;
+      }
+      this.adjusting = true;
       dims = this.getElementDimensions(this.element);
       this.canvas.style.top = "" + dims.topMargin + "px";
       height = Math.abs(dims.topMargin) + Math.abs(dims.bottomMargin) + dims.height;
-      this.canvas.height = height;
-      this.canvas.style.height = "" + height + "px";
       width = dims.width;
+      tmpCanvas = document.createElement('canvas');
+      tmpCanvas.width = width;
+      tmpCanvas.height = height;
+      tmpContext = tmpCanvas.getContext('2d');
+      tmpContext.drawImage(this.canvas, 0, 0, this.canvas.width, this.canvas.height, 0, 0, width, height);
       this.canvas.width = width;
+      this.canvas.height = height;
       this.canvas.style.width = "" + width + "px";
-      console.log(dims, this.canvas.style, this.animationRunning);
+      this.canvas.style.height = "" + height + "px";
+      this.context.drawImage(tmpContext.canvas, 0, 0, tmpCanvas.width, tmpCanvas.height, 0, 0, this.canvas.width, this.canvas.height);
       if (!this.animationRunning) {
-        return this.animatedDraw(dims, 0);
+        this.animatedDraw(dims, 0);
+      } else {
+        this.draw(dims, 0);
       }
+      return this.adjusting = false;
     };
 
     WibblyElement.prototype.needsAnimation = function() {
@@ -789,6 +793,7 @@
         }
         this.drawClippingShape(dims);
       } else {
+        this.context.fillRect(0, 0, this.canvas.width, this.canvas.height);
         if (this.background.ready) {
           this.background.renderToCanvas(this.canvas, this.context, timestamp);
         }

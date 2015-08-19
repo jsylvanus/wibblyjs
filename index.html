@@ -21,6 +21,9 @@
         }
         .wibbly-element {
             z-index: 1;
+            -webkit-transform-style: preserve-3d;
+            -webkit-backface-visibility: hidden;
+            transform: translateZ(0);
         }
         .inner {
             z-index: 2;

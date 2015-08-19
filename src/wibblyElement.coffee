@@ -5,6 +5,7 @@ class @WibblyElement
     @lastDims = null
     @drawing = false
     @adjusting = false
+    @adjustTimeout = null
     @clipCanvas = null
     @isFirstAnimation = yes
     @transitions = []
@@ -79,50 +80,57 @@ class @WibblyElement
   # hooks window resize event
   # TODO: throttle or debouce?
   hookEvents : ->
-    timeout = null
     window.addEventListener 'resize', =>
       # adjusts canvas only if draw routine not already running
-      delayDraw = => setTimeout( =>
-        if @adjusting
-          timeout = setTimeout( delayDraw, 5 ) # try again in 5ms intervals
-        else
-          @adjusting = true
-          @adjustCanvas()
-          @adjusting = false
-          timeout = null
-      , 1000 / 30 )
-          
-      if timeout isnt null
-        clearTimeout(timeout)
-      
-      timeout = delayDraw()
-
+      @adjustCanvas()
 
   # Adjusts canvas to cover its containing element
   adjustCanvas : ->
     # console.log @background
+    if @adjusting is true
+      # console.log "delaying a resize"
+      if @adjustTimeout isnt null
+        clearTimeout(@adjustTimeout)
+        @adjustTimeout = null
+      @adjustTimeout = setTimeout((=> @adjustCanvas()), 1000/60)
+      return
+
+    @adjusting = true
 
     dims = @getElementDimensions @element
     @canvas.style.top = "#{dims.topMargin}px"
 
     height = Math.abs(dims.topMargin) + Math.abs(dims.bottomMargin) + dims.height
+    width = dims.width
+
+    tmpCanvas = document.createElement('canvas')
+    tmpCanvas.width = width
+    tmpCanvas.height = height
+    tmpContext = tmpCanvas.getContext('2d')
+
+    tmpContext.drawImage @canvas, 0, 0, @canvas.width, @canvas.height, 0, 0, width, height
+
+    @canvas.width = width
     @canvas.height = height
+
+    @canvas.style.width = "#{width}px"
     @canvas.style.height = "#{height}px"
 
-    width = dims.width
-    @canvas.width = width
-    @canvas.style.width = "#{width}px"
-
-    console.log dims, @canvas.style, @animationRunning
+    @context.drawImage(tmpContext.canvas, 0, 0, tmpCanvas.width, tmpCanvas.height, 0, 0, @canvas.width, @canvas.height)
 
     if not @animationRunning
       @animatedDraw dims, 0
+    else
+      @draw dims, 0
+
+    @adjusting = false
 
 
   needsAnimation : ->
     return yes if @background.requiresRedrawing
     return yes if @transitions.length > 0
     return no
+
 
   animatedDraw : (timestamp = 0) =>
     # console.log "animatedDraw"
@@ -133,6 +141,7 @@ class @WibblyElement
       requestAnimationFrame @animatedDraw
     else
       @animationRunning = no
+
 
   updateClippingCanvas : (dims) ->
     @clipCanvas.width = dims.width
@@ -184,8 +193,8 @@ class @WibblyElement
 
 
   # Draws the bezier mask and background
-  draw : (dims, timestamp = 0) ->
-    # console.log "draw"
+  draw : (dims, timestamp = 0) =>
+
     @drawing = true
     if @compositeSupported # faster composite operation version
       
@@ -218,6 +227,7 @@ class @WibblyElement
       # @drawClippingShape(dims)
       # @context.fill()
       # @context.clip()
+      @context.fillRect(0,0,@canvas.width,@canvas.height)
 
       # draw the background into the clipping region
       @background.renderToCanvas(@canvas, @context, timestamp) if @background.ready
