@@ -39,7 +39,10 @@ class @VideoBackground extends @BackgroundStrategy
   detectVideoSupport : ->
     element = document.createElement('video')
     # rAF could be polyfill'd if not present, we mostly just need to know that video is supported
-    typeof element.play is 'function' and typeof requestAnimationFrame is 'function'
+    basicSupport = typeof element.play is 'function' and typeof requestAnimationFrame is 'function'
+    iOS = /iPad|iPhone|iPod/.test(navigator.platform)
+
+    basicSupport and not iOS # iOS can't use video as a source
 
 
   renderToCanvas : (element, context, dTime = 0) ->

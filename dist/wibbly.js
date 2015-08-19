@@ -627,9 +627,11 @@
     };
 
     VideoBackground.prototype.detectVideoSupport = function() {
-      var element;
+      var basicSupport, element, iOS;
       element = document.createElement('video');
-      return typeof element.play === 'function' && typeof requestAnimationFrame === 'function';
+      basicSupport = typeof element.play === 'function' && typeof requestAnimationFrame === 'function';
+      iOS = /iPad|iPhone|iPod/.test(navigator.platform);
+      return basicSupport && !iOS;
     };
 
     VideoBackground.prototype.renderToCanvas = function(element, context, dTime) {
