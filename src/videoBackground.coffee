@@ -2,6 +2,7 @@
 class @VideoBackground extends @BackgroundStrategy
 
   constructor: (baseurl) ->
+    @debug = false
     super()
     @requiresRedrawing = yes
     throw "No HTML5 video support detected" if not @detectVideoSupport()
@@ -46,6 +47,10 @@ class @VideoBackground extends @BackgroundStrategy
 
     dims = @getDimensions element
     box = @getRenderBox(dims, @video)
+
+    if @debug
+      console.log dims, box, element, context, @video
+      @debug = false
     
     # console.log box, dims
     context.drawImage(@video, box.source.x, box.source.y, box.dims.width, box.dims.height, 0, 0, dims.vector.values[0], dims.vector.values[1])

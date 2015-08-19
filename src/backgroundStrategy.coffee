@@ -67,7 +67,15 @@ class @BackgroundStrategy
     else
       @lastDims = dCanvas
       imageDims = @getDimensions sourceElement
-      box = @lastBox = @sourceBox(dCanvas, imageDims)
+      @lastBox = @sourceBox(dCanvas, imageDims)
+
+      # clip the box to make sure it stays inside the actual canvas
+      @lastBox.source.x = 0 if @lastBox.source.x < 0
+      @lastBox.source.y = 0 if @lastBox.source.y < 0
+      @lastBox.dims.height = imageDims.height() if @lastBox.dims.height > imageDims.height()
+      @lastBox.dims.width = imageDims.width() if @lastBox.dims.width > imageDims.width()
+
+      box = @lastBox
     box
 
   # the following are intended to be overridden by subclasses

@@ -1,4 +1,72 @@
 (function() {
+  (function() {
+    var lastFrame, method, now, queue, requestAnimationFrame, timer, vendor, _i, _len, _ref, _ref1;
+    method = 'native';
+    now = Date.now || function() {
+      return new Date().getTime();
+    };
+    requestAnimationFrame = window.requestAnimationFrame;
+    _ref = ['webkit', 'moz', 'o', 'ms'];
+    for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+      vendor = _ref[_i];
+      if (requestAnimationFrame == null) {
+        requestAnimationFrame = window["" + vendor + "RequestAnimationFrame"];
+      }
+    }
+    if (requestAnimationFrame == null) {
+      method = 'timer';
+      lastFrame = 0;
+      queue = timer = null;
+      requestAnimationFrame = function(callback) {
+        var fire, nextFrame, time;
+        if (queue != null) {
+          queue.push(callback);
+          return;
+        }
+        time = now();
+        nextFrame = Math.max(0, 16.66 - (time - lastFrame));
+        queue = [callback];
+        lastFrame = time + nextFrame;
+        fire = function() {
+          var cb, q, _j, _len1;
+          q = queue;
+          queue = null;
+          for (_j = 0, _len1 = q.length; _j < _len1; _j++) {
+            cb = q[_j];
+            cb(lastFrame);
+          }
+        };
+        timer = setTimeout(fire, nextFrame);
+      };
+    }
+    requestAnimationFrame(function(time) {
+      var offset, _ref1;
+      if (time < 1e12) {
+        if (((_ref1 = window.performance) != null ? _ref1.now : void 0) != null) {
+          requestAnimationFrame.now = function() {
+            return window.performance.now();
+          };
+          requestAnimationFrame.method = 'native-highres';
+        } else {
+          offset = now() - time;
+          requestAnimationFrame.now = function() {
+            return now() - offset;
+          };
+          requestAnimationFrame.method = 'native-highres-noperf';
+        }
+      } else {
+        requestAnimationFrame.now = now;
+      }
+    });
+    requestAnimationFrame.now = ((_ref1 = window.performance) != null ? _ref1.now : void 0) != null ? (function() {
+      return window.performance.now();
+    }) : now;
+    requestAnimationFrame.method = method;
+    return window.requestAnimationFrame = requestAnimationFrame;
+  })();
+
+}).call(this);
+;(function() {
   var __slice = [].slice;
 
   this.Vector = (function() {
@@ -356,7 +424,20 @@
       } else {
         this.lastDims = dCanvas;
         imageDims = this.getDimensions(sourceElement);
-        box = this.lastBox = this.sourceBox(dCanvas, imageDims);
+        this.lastBox = this.sourceBox(dCanvas, imageDims);
+        if (this.lastBox.source.x < 0) {
+          this.lastBox.source.x = 0;
+        }
+        if (this.lastBox.source.y < 0) {
+          this.lastBox.source.y = 0;
+        }
+        if (this.lastBox.dims.height > imageDims.height()) {
+          this.lastBox.dims.height = imageDims.height();
+        }
+        if (this.lastBox.dims.width > imageDims.width()) {
+          this.lastBox.dims.width = imageDims.width();
+        }
+        box = this.lastBox;
       }
       return box;
     };
@@ -504,6 +585,7 @@
     __extends(VideoBackground, _super);
 
     function VideoBackground(baseurl) {
+      this.debug = false;
       VideoBackground.__super__.constructor.call(this);
       this.requiresRedrawing = true;
       if (!this.detectVideoSupport()) {
@@ -560,6 +642,10 @@
       }
       dims = this.getDimensions(element);
       box = this.getRenderBox(dims, this.video);
+      if (this.debug) {
+        console.log(dims, box, element, context, this.video);
+        this.debug = false;
+      }
       return context.drawImage(this.video, box.source.x, box.source.y, box.dims.width, box.dims.height, 0, 0, dims.vector.values[0], dims.vector.values[1]);
     };
 
@@ -580,6 +666,35 @@
 
 }).call(this);
 ;(function() {
+  this.FrameManager = (function() {
+    function FrameManager() {
+      this.frameid = 0;
+      this.nextFrame = null;
+      this.debug = false;
+    }
+
+    FrameManager.prototype.queueFrame = function(callback) {
+      this.nextFrame = callback;
+      return this.frameid = Math.random();
+    };
+
+    FrameManager.prototype.frame = function() {
+      var callFrame;
+      callFrame = this.nextFrame;
+      if (this.debug) {
+        console.log(this.frameid);
+      }
+      if (callFrame !== null) {
+        return callFrame();
+      }
+    };
+
+    return FrameManager;
+
+  })();
+
+}).call(this);
+;(function() {
   var __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
 
   this.WibblyElement = (function() {
@@ -592,9 +707,8 @@
       this.adjusting = false;
       this.adjustTimeout = null;
       this.clipCanvas = null;
-      this.isFirstAnimation = true;
       this.transitions = [];
-      this.polyfillRAF();
+      this.frames = new FrameManager();
       this.compositeSupported = this.isCompositeSupported();
       this.animationRunning = false;
       this.element.style.position = 'relative';
@@ -605,12 +719,6 @@
       this.hookEvents();
       this.adjustCanvas();
     }
-
-    WibblyElement.prototype.polyfillRAF = function() {
-      return window.requestAnimationFrame = window.requestAnimationFrame || window.webkitRequestAnimationFrame || window.mozRequestAnimationFrame || (function(callback) {
-        return window.setTimeout(callback, 1000 / 60);
-      });
-    };
 
     WibblyElement.prototype.isCompositeSupported = function() {
       var ctx, test;
@@ -704,10 +812,15 @@
       this.canvas.style.width = "" + width + "px";
       this.canvas.style.height = "" + height + "px";
       this.context.drawImage(tmpContext.canvas, 0, 0, tmpCanvas.width, tmpCanvas.height, 0, 0, this.canvas.width, this.canvas.height);
-      if (!this.animationRunning) {
-        this.animatedDraw(dims, 0);
+      if (this.animationRunning) {
+
+      } else if (!this.animationRunning && this.needsAnimation()) {
+        this.animatedDraw();
       } else {
-        this.draw(dims, 0);
+        this.frames.queueFrame(function() {
+          return _this.draw(dims, 0);
+        });
+        this.frames.frame();
       }
       return this.adjusting = false;
     };
@@ -723,12 +836,16 @@
     };
 
     WibblyElement.prototype.animatedDraw = function(timestamp) {
-      var dims;
+      var dims,
+        _this = this;
       if (timestamp == null) {
         timestamp = 0;
       }
       dims = this.getElementDimensions(this.element);
-      this.draw(dims, timestamp);
+      this.frames.queueFrame(function() {
+        return _this.draw(dims, timestamp);
+      });
+      this.frames.frame();
       if (this.needsAnimation()) {
         this.animationRunning = true;
         return requestAnimationFrame(this.animatedDraw);

@@ -27,6 +27,7 @@ module.exports = function(grunt) {
     	dist : {
     		files : {
     			'dist/wibbly.js' : [
+    				'build/raf.js',
 					'build/vector.js',
 					'build/dimensions.js',
 					'build/scalableBezier.js',
@@ -35,6 +36,7 @@ module.exports = function(grunt) {
 					'build/imageBackground.js',
 					'build/solidBackground.js',
 					'build/videoBackground.js',
+					'build/frameManager.js',
 					'build/wibblyElement.js'
 	    		],
 	    		'dist/wibblytabs.js' : [

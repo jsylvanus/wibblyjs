@@ -7,9 +7,8 @@ class @WibblyElement
     @adjusting = false
     @adjustTimeout = null
     @clipCanvas = null
-    @isFirstAnimation = yes
     @transitions = []
-    @polyfillRAF()
+    @frames = new FrameManager()
     @compositeSupported = @isCompositeSupported()
     @animationRunning = no
     @element.style.position = 'relative'
@@ -20,8 +19,6 @@ class @WibblyElement
     @hookEvents()
     @adjustCanvas()
 
-  polyfillRAF : ->
-    window.requestAnimationFrame = window.requestAnimationFrame or window.webkitRequestAnimationFrame or window.mozRequestAnimationFrame or ((callback) -> window.setTimeout(callback, 1000/60))
 
   isCompositeSupported : ->
     test = document.createElement 'canvas'
@@ -118,10 +115,14 @@ class @WibblyElement
 
     @context.drawImage(tmpContext.canvas, 0, 0, tmpCanvas.width, tmpCanvas.height, 0, 0, @canvas.width, @canvas.height)
 
-    if not @animationRunning
-      @animatedDraw dims, 0
+    if @animationRunning
+      # do nothing, it'll get caught on next frame
+    else if not @animationRunning and @needsAnimation()
+      @animatedDraw() # boot up animation if it isnt running yet
     else
-      @draw dims, 0
+      @frames.queueFrame(=> @draw(dims, 0))
+      # @draw(dims, timestamp)
+      @frames.frame()
 
     @adjusting = false
 
@@ -135,7 +136,9 @@ class @WibblyElement
   animatedDraw : (timestamp = 0) =>
     # console.log "animatedDraw"
     dims = @getElementDimensions(@element)
-    @draw(dims, timestamp)
+    @frames.queueFrame(=> @draw(dims, timestamp))
+    @frames.frame()
+    # @draw(dims, timestamp)
     if @needsAnimation()
       @animationRunning = yes
       requestAnimationFrame @animatedDraw
@@ -197,7 +200,7 @@ class @WibblyElement
 
     @drawing = true
     if @compositeSupported # faster composite operation version
-      
+
       #===== v1
       # # @context.clearRect(0,0,@canvas.width, @canvas.height)
       # # draw the background first
