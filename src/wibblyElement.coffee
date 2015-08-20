@@ -220,7 +220,7 @@ class @WibblyElement
       @drawClippingShape(dims)
 
       # handle transitions
-#      @processTransitions dims, timestamp
+      @processTransitions dims, timestamp
 
 
     else # slow version

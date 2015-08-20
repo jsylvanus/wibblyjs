@@ -912,6 +912,7 @@
           this.background.renderToCanvas(this.canvas, this.context, timestamp);
         }
         this.drawClippingShape(dims);
+        this.processTransitions(dims, timestamp);
       } else {
         this.context.fillRect(0, 0, this.canvas.width, this.canvas.height);
         if (this.background.ready) {
