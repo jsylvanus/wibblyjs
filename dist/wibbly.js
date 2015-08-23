@@ -339,7 +339,11 @@
     };
 
     BackgroundTransition.prototype.crappySupport = function() {
-      return typeof Date.now !== 'function';
+      var has_raf, is_ios, missing_dt_now;
+      missing_dt_now = typeof Date.now !== 'function';
+      has_raf = typeof window.requestAnimationFrame === 'function';
+      is_ios = /iPad|iPhone|iPod/.test(navigator.platform);
+      return is_ios || missing_dt_now || !has_raf;
     };
 
     return BackgroundTransition;

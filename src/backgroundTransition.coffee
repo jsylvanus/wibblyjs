@@ -39,5 +39,9 @@ class @BackgroundTransition
 
 
   crappySupport : ->
-    typeof Date.now isnt 'function'
+    missing_dt_now = typeof Date.now isnt 'function'
+    has_raf = typeof window.requestAnimationFrame is 'function'
+    is_ios = /iPad|iPhone|iPod/.test(navigator.platform)
+
+    is_ios or missing_dt_now or not has_raf
     
