@@ -67,11 +67,18 @@ class @WibblyElement
   # gets useful dimension info about the element that we're scaling the canvas to
   getElementDimensions : (element) ->
     style = element.currentStyle || window.getComputedStyle(element)
+  
+    dims =
+      width: Math.ceil(element.offsetWidth)
+      height: Math.ceil(element.offsetHeight)
+      topMargin: Math.ceil(parseFloat(style.marginTop))
+      bottomMargin: Math.ceil(parseFloat(style.marginBottom))
 
-    width: Math.ceil(element.offsetWidth)
-    height: Math.ceil(element.offsetHeight)
-    topMargin: Math.ceil(parseFloat(style.marginTop))
-    bottomMargin: Math.ceil(parseFloat(style.marginBottom))
+    # sanity check: in IE these can return NAN if they aren't defined
+    dims.topMargin = 0 if isNaN(dims.topMargin)
+    dims.bottomMargin = 0 if isNaN(dims.bottomMargin)
+
+    dims
 
   
   # hooks window resize event

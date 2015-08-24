@@ -24,7 +24,7 @@
           return;
         }
         time = now();
-        nextFrame = Math.max(0, 16.66 - (time - lastFrame));
+        nextFrame = Math.max(0, 33.89 - (time - lastFrame));
         queue = [callback];
         lastFrame = time + nextFrame;
         fire = function() {
@@ -403,6 +403,9 @@
       if (element instanceof HTMLVideoElement) {
         return new Dimensions(element.videoWidth, element.videoHeight);
       }
+      if (element instanceof HTMLImageElement) {
+        return new Dimensions(element.naturalWidth, element.naturalHeight);
+      }
       return new Dimensions(element.width, element.height);
     };
 
@@ -514,6 +517,9 @@
       var img,
         _this = this;
       img = document.createElement('img');
+      if (typeof console !== "undefined" && console !== null) {
+        console.log("created image for url " + url);
+      }
       img.addEventListener('load', function() {
         return _this.setReady();
       });
@@ -528,7 +534,8 @@
       this.imageCanvas.width = dims.width();
       this.imageCanvas.height = dims.height();
       this.imageContext = this.imageCanvas.getContext('2d');
-      return this.imageContext.drawImage(this.image, 0, 0);
+      this.imageContext.drawImage(this.image, 0, 0);
+      return typeof console !== "undefined" && console !== null ? console.log("created canvas source for image", this) : void 0;
     };
 
     ImageBackground.prototype.setReady = function() {
@@ -774,14 +781,21 @@
     };
 
     WibblyElement.prototype.getElementDimensions = function(element) {
-      var style;
+      var dims, style;
       style = element.currentStyle || window.getComputedStyle(element);
-      return {
+      dims = {
         width: Math.ceil(element.offsetWidth),
         height: Math.ceil(element.offsetHeight),
         topMargin: Math.ceil(parseFloat(style.marginTop)),
         bottomMargin: Math.ceil(parseFloat(style.marginBottom))
       };
+      if (isNaN(dims.topMargin)) {
+        dims.topMargin = 0;
+      }
+      if (isNaN(dims.bottomMargin)) {
+        dims.bottomMargin = 0;
+      }
+      return dims;
     };
 
     WibblyElement.prototype.hookEvents = function() {

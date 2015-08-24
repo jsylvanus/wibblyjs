@@ -17,7 +17,8 @@ do ->
         return
 
       time = now()
-      nextFrame = Math.max 0, 16.66 - (time - lastFrame)
+      # nextFrame = Math.max 0, 16.66 - (time - lastFrame) # this is for 60 FPS, a bit fast for IE
+      nextFrame = Math.max 0, 33.89 - (time - lastFrame) # this is 29.5 fps
 
       queue = [callback]
       lastFrame = time + nextFrame

@@ -48,6 +48,7 @@ class @BackgroundStrategy
   # given element MUST have width/height attributes set (e.g. canvas)
   getDimensions : (element) ->
     return new Dimensions(element.videoWidth, element.videoHeight) if element instanceof HTMLVideoElement
+    return new Dimensions(element.naturalWidth, element.naturalHeight) if element instanceof HTMLImageElement
     new Dimensions(element.width, element.height)
 
   sourceBox : (dCanvas, dSource) ->

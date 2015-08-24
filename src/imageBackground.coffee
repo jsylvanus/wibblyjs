@@ -1,7 +1,6 @@
 
 class @ImageBackground extends @BackgroundStrategy
 
-
   constructor: (url) ->
     super()
     @callback = null
@@ -40,10 +39,12 @@ class @ImageBackground extends @BackgroundStrategy
   # creates an image element and sets its load even tot fire @setReady
   createImage: (url) ->
     img = document.createElement('img')
+    console?.log "created image for url #{url}"
     img.addEventListener 'load', =>
       @setReady()
     img.src = url
     img
+
     
   createCanvasSource : ->
     dims = @getDimensions @image
@@ -52,6 +53,8 @@ class @ImageBackground extends @BackgroundStrategy
     @imageCanvas.height = dims.height()
     @imageContext = @imageCanvas.getContext('2d')
     @imageContext.drawImage @image, 0, 0
+    console?.log "created canvas source for image", @
+
 
   # toggles @ready and fires @callback if it's been set
   setReady : ->
