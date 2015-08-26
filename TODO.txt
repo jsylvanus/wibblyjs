@@ -1,12 +1,11 @@
-* Built-in CSS
-* video and anigif background strategies
-* ability to animate control points on beziers
-* support for native srcset-style image defs / limited emulation if not available?
+* Manage rendering with a central object that handles RAF callbacks
+* Stop rendering if off screen
+* Parallax support via data-parallax=[buffer-amount-in-px]
+* Loading/loaded classes
+* Background breakpoint support
+* Better srcset support
+* Detect and throttle if dropping frames
+* Ability to animate points on beziers
+* Animated gif background support
 
-also via $ grep TODO -r .
-
-./src/dimensions.coffee:  # TODO: refactor name
-./src/imageBackground.coffee:  # TODO: refactor to allow different positioning from center
-./src/vector.coffee:  # TODO: Maybe make a better version? this won't catch nested objects, should 
-./src/wibblyElement.coffee:  # TODO: throttle or debouce?
-
+see also $ grep TODO -r .
