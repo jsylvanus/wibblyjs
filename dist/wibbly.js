@@ -997,12 +997,12 @@
 
 }).call(this);
 ;(function() {
-  this.FrameQueue = (function() {
+  this.ObjectPool = (function() {
     var internal_counter;
 
     internal_counter = 0;
 
-    function FrameQueue(pool_max) {
+    function ObjectPool(pool_max) {
       var i, _, _i, _len, _ref;
       if (pool_max == null) {
         pool_max = 100;
@@ -1011,19 +1011,15 @@
       _ref = this.pool;
       for (i = _i = 0, _len = _ref.length; _i < _len; i = ++_i) {
         _ = _ref[i];
-        this.pool[i] = {
-          origin: null,
-          callback_identity: null,
-          callback: null
-        };
+        this.pool[i] = null;
       }
     }
 
-    FrameQueue.prototype.count = function() {
+    ObjectPool.prototype.count = function() {
       return internal_counter;
     };
 
-    return FrameQueue;
+    return ObjectPool;
 
   })();
 

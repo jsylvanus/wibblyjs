@@ -1,18 +1,58 @@
-describe('FrameQueue', function() {
+describe('ObjectPool', function() {
 
-	it('initializes its pool to empty objects', function () {
-		var queue = new FrameQueue(5),
-			pool_obj;
+	it('initializes its pool to null', function () {
+		var queue = new ObjectPool(5),
+			pool_item;
 		expect(queue.pool.length).toBe(5);
 		
-		pool_obj = queue.pool[4];
-		expect(pool_obj.origin).toBe(null);
+		pool_item = queue.pool[4];
+		expect(pool_item).toBe(null);
 	});
 
 	it('starts with a queue count of zero', function() {
-		var queue = new FrameQueue(5);
+		var queue = new ObjectPool(5);
 
 		expect(queue.count()).toBe(0);
+	});
+
+	it('adds items to pool', function() {
+
+	});
+
+	it('increases queue count on add', function() {
+
+	});
+
+	it('decreases queue count on delete', function() {
+
+	});
+
+	it('reuses previous objects', function() {
+
+	});
+
+	it('returns an array of current items', function() {
+
+	});
+
+	describe('Convenience Iterator', function() {
+
+		it('iterates items', function() {
+
+		});
+
+	});
+
+	describe('Search', function() {
+
+		it('returns false if not found', function() {
+
+		});
+
+		if('returns all matching objects', function() {
+
+		});
+
 	});
 
 });
