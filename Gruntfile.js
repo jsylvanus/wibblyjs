@@ -30,6 +30,7 @@ module.exports = function(grunt) {
     				'build/raf.js',
 					'build/vector.js',
 					'build/dimensions.js',
+    				'build/Layer.js',
 					'build/scalableBezier.js',
 					'build/backgroundTransition.js',
 					'build/backgroundStrategy.js',

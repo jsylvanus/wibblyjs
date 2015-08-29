@@ -1,11 +1,19 @@
 describe('Layer',function() {
 	
 	it('constructs with values', function() {
-		var layer = new Layer(0, 0, 100, 100);
+		var construct = function() {
+			var layer = new BigSea.Layer(0, 0, 100, 100);
+		};
+
+		expect(construct).not.toThrow();
 	});
 
 	it('constructs without values', function() {
-		var layer = new Layer();
+		var construct = function() {
+			var layer = new BigSea.Layer();
+		};
+
+		expect(construct).not.toThrow();
 	});
 
 	describe('Properties',function() {
@@ -13,7 +21,7 @@ describe('Layer',function() {
 		var test_layer;
 
 		beforeEach(function() {
-			test_layer = new Layer(0, 5, 200, 100);
+			test_layer = new BigSea.Layer(0, 5, 200, 100);
 		});
 
 		it('origin is a vector', function() {
@@ -35,10 +43,10 @@ describe('Layer',function() {
 		var test_layer;
 
 		beforeEach(function() {
-			test_layer = new Layer(0, 5, 200, 100);
+			test_layer = new BigSea.Layer(0, 5, 200, 100);
 		});
 		
-		it('has conenience methods', function() {
+		it('has convenience methods', function() {
 			expect(test_layer.left()).toBe(0);
 			expect(test_layer.top()).toBe(5);
 			expect(test_layer.width()).toBe(200);
@@ -50,8 +58,8 @@ describe('Layer',function() {
 			var inequal, equal;
 
 			beforeEach(function() {
-				equal = new Layer(0, 5, 200, 100);
-				inequal = new Layer(10, 50, 1000, 2000);
+				equal = new BigSea.Layer(0, 5, 200, 100);
+				inequal = new BigSea.Layer(10, 50, 1000, 2000);
 			});
 
 			it('returns true for matching', function() {
@@ -70,8 +78,8 @@ describe('Layer',function() {
 
 			beforeEach(function() {
 				// only w/h match test_layer
-				equiv_layer = new Layer(100, 500, 200, 100);
-				inequiv_layer = new Layer(100, 500, 400, 200);
+				equiv_layer = new BigSea.Layer(100, 500, 200, 100);
+				inequiv_layer = new BigSea.Layer(100, 500, 400, 200);
 			});
 
 			it('returns true for same dimensions', function() {

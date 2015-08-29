@@ -205,6 +205,22 @@
 
 }).call(this);
 ;(function() {
+  if (this.BigSea == null) {
+    this.BigSea = {};
+  }
+
+  this.BigSea.Layer = (function() {
+    function Layer(left, top, width, height) {
+      this.origin = new Vector(left, top);
+      this.box = new Dimensions(width, height);
+    }
+
+    return Layer;
+
+  })();
+
+}).call(this);
+;(function() {
   this.ScalableBezier = (function() {
     function ScalableBezier(startX, startY, controlX1, controlY1, controlX2, controlY2, endX, endY) {
       this.startX = startX;
