@@ -51,6 +51,8 @@ describe('Layer',function() {
 			expect(test_layer.top()).toBe(5);
 			expect(test_layer.width()).toBe(200);
 			expect(test_layer.height()).toBe(100);
+			expect(test_layer.bottom()).toBe(105);
+			expect(test_layer.right()).toBe(200);
 		});
 
 		describe('Equals',function() {
@@ -63,12 +65,12 @@ describe('Layer',function() {
 			});
 
 			it('returns true for matching', function() {
-				expect(test_layer.equals(equal)).toBe(true);
+				expect(test_layer.is_equal_to(equal)).toBe(true);
 			});
 
 			it('returns false for non-matching', function() {
-				expect(test_layer.equals(equal)).toBe(false);
-			});
+				expect(test_layer.is_equal_to(inequal)).toBe(false);
+			})
 
 		});
 
@@ -83,21 +85,61 @@ describe('Layer',function() {
 			});
 
 			it('returns true for same dimensions', function() {
-				expect(test_layer.equivalent(equiv_layer)).toBe(true);
+				expect(test_layer.is_equivalent_to(equiv_layer)).toBe(true);
 			});
 
 			it('returns false for different dimensions', function() {
-				expect(test_layer.equivalent(inequiv_layer)).toBe(false);
+				expect(test_layer.is_equivalent_to(inequiv_layer)).toBe(false);
 			});
 
 		});
 
 		describe('Intersects',function() {
-			// TODO
+			var inside, outside, around, touching;
+
+			beforeEach(function() {
+				inside = new BigSea.Layer(2, 7, 100, 50);
+				outside = new BigSea.Layer(300, 120, 50, 50);
+				around = new BigSea.Layer(-5, -5, 300, 200);
+				touching = new BigSea.Layer(50, 50, 400, 200);
+			});
+
+			it('returns true if layer intersects at all', function() {
+				expect(test_layer.intersects(test_layer)).toBe(true);
+				expect(test_layer.intersects(inside)).toBe(true);
+				expect(test_layer.intersects(around)).toBe(true);
+				expect(test_layer.intersects(touching)).toBe(true);
+			});
+
+			it('returns false otherwise', function() {
+				expect(test_layer.intersects(outside)).toBe(false);
+			});
+			
 		});
 
 		describe('Contains',function() {
-			// TODO
+			
+			var inside, outside, around;
+
+			beforeEach(function() {
+				inside = new BigSea.Layer(2, 7, 100, 50);
+				outside = new BigSea.Layer(300, 120, 50, 50);
+				around = new BigSea.Layer(-5, -5, 300, 200);
+			});
+
+			it('returns true if other is same', function() {
+				expect(test_layer.contains(test_layer)).toBe(true);
+			});
+
+			it('returns true if other is completely inside', function() {
+				expect(test_layer.contains(inside)).toBe(true);
+			});
+
+			it('returns false otherwise', function() {
+				expect(test_layer.contains(outside)).toBe(false);
+				expect(test_layer.contains(around)).toBe(false);
+			});
+
 		});
 
 	});

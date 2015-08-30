@@ -215,6 +215,46 @@
       this.box = new Dimensions(width, height);
     }
 
+    Layer.prototype.left = function() {
+      return this.origin.x();
+    };
+
+    Layer.prototype.top = function() {
+      return this.origin.y();
+    };
+
+    Layer.prototype.width = function() {
+      return this.box.width();
+    };
+
+    Layer.prototype.height = function() {
+      return this.box.height();
+    };
+
+    Layer.prototype.right = function() {
+      return this.left() + this.width();
+    };
+
+    Layer.prototype.bottom = function() {
+      return this.top() + this.height();
+    };
+
+    Layer.prototype.is_equal_to = function(other) {
+      return this.origin.equals(other.origin) && this.box.equals(other.box);
+    };
+
+    Layer.prototype.is_equivalent_to = function(other) {
+      return this.box.equals(other.box);
+    };
+
+    Layer.prototype.intersects = function(other) {
+      return this.left() < other.right() && this.top() < other.bottom() && this.right() > other.left() && this.bottom() > other.top();
+    };
+
+    Layer.prototype.contains = function(other) {
+      return this.left() <= other.left() && this.top() <= other.top() && this.bottom() >= other.bottom() && this.right() >= other.right();
+    };
+
     return Layer;
 
   })();
