@@ -13,6 +13,7 @@ class @BigSea.BezierMask
 
   constructor : (@top, @bottom) ->
     @createClipCanvas()
+    @lastDims = null
 
 
   createClipCanvas : ->
@@ -58,16 +59,16 @@ class @BigSea.BezierMask
     fullHeight = dims.height + abs(dims.topMargin) + abs(dims.bottomMargin)
     fullDims = { w: dims.width, h: fullHeight }
 
-    if not @lastDims?
+    if @lastDims is null or not @dimensionsMatch(@lastDims, fullDims)
       @updateClippingCanvas(dims)
-      @lastDims = fullDims
 
-    if not (fullDims.w == @lastDims.w and fullDims.h == @lastDims.h)
-      @updateClippingCanvas(dims)
-      @lastDims = vDims
+    @lastDims = fullDims
 
     context.save()
     context.globalCompositeOperation = 'destination-in'
     context.drawImage(clipContext.canvas, 0, 0, fullDims.w, fullDims.h)
     context.restore()
+
+  dimensionsMatch : (last, latest) ->
+    last.w == latest.w and last.h == latest.h
 

@@ -467,6 +467,7 @@
       this.top = top;
       this.bottom = bottom;
       this.createClipCanvas();
+      this.lastDims = null;
     }
 
     BezierMask.prototype.createClipCanvas = function() {
@@ -515,18 +516,18 @@
         w: dims.width,
         h: fullHeight
       };
-      if (this.lastDims == null) {
+      if (this.lastDims === null || !this.dimensionsMatch(this.lastDims, fullDims)) {
         this.updateClippingCanvas(dims);
-        this.lastDims = fullDims;
       }
-      if (!(fullDims.w === this.lastDims.w && fullDims.h === this.lastDims.h)) {
-        this.updateClippingCanvas(dims);
-        this.lastDims = vDims;
-      }
+      this.lastDims = fullDims;
       context.save();
       context.globalCompositeOperation = 'destination-in';
       context.drawImage(clipContext.canvas, 0, 0, fullDims.w, fullDims.h);
       return context.restore();
+    };
+
+    BezierMask.prototype.dimensionsMatch = function(last, latest) {
+      return last.w === latest.w && last.h === latest.h;
     };
 
     return BezierMask;
