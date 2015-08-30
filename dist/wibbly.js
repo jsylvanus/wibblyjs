@@ -452,6 +452,13 @@
   this.BigSea.BezierMask = (function() {
     var abs, clipCanvas, clipContext, updateCanvasDimensions;
 
+    BezierMask.fromElementAttributes = function(element) {
+      var bottom, top;
+      top = ScalableBezier.FromAttribute(element, 'data-top');
+      bottom = ScalableBezier.FromAttribute(element, 'data-bottom');
+      return new BigSea.BezierMask(top, bottom);
+    };
+
     clipCanvas = null;
 
     clipContext = null;
@@ -964,9 +971,7 @@
       this.compositeSupported = this.isCompositeSupported();
       this.animationRunning = false;
       this.element.style.position = 'relative';
-      this.top = ScalableBezier.FromAttribute(this.element, 'data-top');
-      this.bottom = ScalableBezier.FromAttribute(this.element, 'data-bottom');
-      this.bezierMask = new BigSea.BezierMask(this.top, this.bottom);
+      this.bezierMask = BigSea.BezierMask.fromElementAttributes(this.element);
       this.loadBackground(this.element);
       this.createCanvas();
       this.hookEvents();

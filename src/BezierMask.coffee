@@ -2,6 +2,13 @@
 
 class @BigSea.BezierMask
 
+  @fromElementAttributes : (element) ->
+    top = ScalableBezier.FromAttribute element, 'data-top'
+    bottom = ScalableBezier.FromAttribute element, 'data-bottom'
+    new BigSea.BezierMask top, bottom
+
+  # private vars/functions
+  
   clipCanvas = null
   clipContext = null
   abs = Math.abs
@@ -10,6 +17,7 @@ class @BigSea.BezierMask
     clipCanvas.width = dims.width
     clipCanvas.height = dims.height + abs(dims.topMargin) + abs(dims.bottomMargin)
 
+  # end private section
 
   constructor : (@top, @bottom) ->
     @createClipCanvas()

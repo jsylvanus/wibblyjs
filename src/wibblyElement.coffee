@@ -12,9 +12,7 @@ class @WibblyElement
     @animationRunning = no
     @element.style.position = 'relative'
 
-    @top = ScalableBezier.FromAttribute @element, 'data-top'
-    @bottom = ScalableBezier.FromAttribute @element, 'data-bottom'
-    @bezierMask = new BigSea.BezierMask @top, @bottom
+    @bezierMask = BigSea.BezierMask.fromElementAttributes(@element)
 
     @loadBackground(@element)
     @createCanvas()
