@@ -1127,31 +1127,3 @@
   })();
 
 }).call(this);
-;(function() {
-  this.ObjectPool = (function() {
-    var internal_counter;
-
-    internal_counter = 0;
-
-    function ObjectPool(pool_max) {
-      var i, _, _i, _len, _ref;
-      if (pool_max == null) {
-        pool_max = 100;
-      }
-      this.pool = new Array(pool_max);
-      _ref = this.pool;
-      for (i = _i = 0, _len = _ref.length; _i < _len; i = ++_i) {
-        _ = _ref[i];
-        this.pool[i] = null;
-      }
-    }
-
-    ObjectPool.prototype.count = function() {
-      return internal_counter;
-    };
-
-    return ObjectPool;
-
-  })();
-
-}).call(this);
