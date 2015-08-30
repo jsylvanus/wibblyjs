@@ -21,7 +21,12 @@ class @Vector
     vec = @clone()
     vec.mutScale(scalar)
     vec
+
+  update : (@values...) -> @
   
+  setX : (val) -> @values[0] = val
+  setY : (val) -> @values[1] = val
+  setZ : (val) -> @values[2] = val
 
   # mutator version of scale()
   mutScale : (scalar) ->

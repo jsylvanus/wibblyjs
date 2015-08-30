@@ -17,6 +17,9 @@ class @Dimensions
     box.mutableScale(factor)
     box
 
+  update : (width, height) ->
+    @vector.update(width, height)
+
   mutableScale : (factor) ->
     @vector.mutScale(factor)
 
@@ -28,9 +31,7 @@ class @Dimensions
   height : -> @vector.y()
 
 
-  # Scales this box to fit (fill, actually) another box.
-  # returns a new Dimensions obj
-  # TODO: refactor name
+  # Scales this box to fill another box, returns a new Dimensions obj
   scaleToFill : (other) ->
     ratio_x = other.width() / @width()
     ratio_y = other.height() / @height()

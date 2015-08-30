@@ -96,6 +96,25 @@
       return vec;
     };
 
+    Vector.prototype.update = function() {
+      var values;
+      values = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
+      this.values = values;
+      return this;
+    };
+
+    Vector.prototype.setX = function(val) {
+      return this.values[0] = val;
+    };
+
+    Vector.prototype.setY = function(val) {
+      return this.values[1] = val;
+    };
+
+    Vector.prototype.setZ = function(val) {
+      return this.values[2] = val;
+    };
+
     Vector.prototype.mutScale = function(scalar) {
       return this.values = this.values.map(function(x) {
         return x * scalar;
@@ -164,6 +183,10 @@
       return box;
     };
 
+    Dimensions.prototype.update = function(width, height) {
+      return this.vector.update(width, height);
+    };
+
     Dimensions.prototype.mutableScale = function(factor) {
       return this.vector.mutScale(factor);
     };
@@ -210,6 +233,36 @@
   }
 
   this.BigSea.Layer = (function() {
+    var elementOffset, viewport;
+
+    viewport = null;
+
+    Layer.Viewport = function() {
+      var height, left, top, width;
+      if (viewport === null) {
+        viewport = new BigSea.Layer();
+      }
+      left = window.pageXOffset;
+      top = window.pageYOffset;
+      width = Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
+      height = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
+      return viewport.update(left, top, width, height);
+    };
+
+    elementOffset = function(element) {
+      var left, top;
+      left = element.offsetLeft;
+      top = element.offsetTop;
+      while (element = element.offsetParent) {
+        left += element.offsetLeft;
+        top += element.offsetTop;
+      }
+      return {
+        left: left,
+        top: top
+      };
+    };
+
     function Layer(left, top, width, height) {
       this.origin = new Vector(left, top);
       this.box = new Dimensions(width, height);
@@ -253,6 +306,28 @@
 
     Layer.prototype.contains = function(other) {
       return this.left() <= other.left() && this.top() <= other.top() && this.bottom() >= other.bottom() && this.right() >= other.right();
+    };
+
+    Layer.prototype.update = function(left, top, width, height) {
+      this.origin.update(left, top);
+      this.box.update(width, height);
+      return this;
+    };
+
+    Layer.prototype.updateFromElement = function(element) {
+      var offset, rect;
+      if (typeof element.getBoundingClientRect === 'function') {
+        rect = element.getBoundingClientRect();
+        offset = {
+          x: window.pageXOffset,
+          y: window.pageYOffset
+        };
+        this.update(rect.left + offset.x, rect.top + offset.y, rect.width, rect.height);
+      } else {
+        offset = elementOffset(element);
+        this.update(offset.left, offset.top, element.offsetWidth, element.offsetHeight);
+      }
+      return this;
     };
 
     return Layer;
