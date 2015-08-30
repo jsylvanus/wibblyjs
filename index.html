@@ -25,6 +25,9 @@
             -webkit-backface-visibility: hidden;
             transform: translateZ(0);
         }
+        .wib-loading {
+            background: green;
+        }
         .inner {
             z-index: 2;
             padding: 5em 1em;
@@ -37,7 +40,7 @@
     <h2>Image Test</h2>
 </div>
 <!--<div class="wibbly-element" data-top="0 0.5 0.33 1 0.66 0 1 0.5" data-bottom="0 1 0.33 0 0.66 0 1 1" data-background="image http://6lg6m8o6jlvetm53ijzpndl7.wpengine.netdna-cdn.com/wp-content/themes/bigsea2013/img/bg-about.jpg 1x, http://i.imgur.com/uKEnjZP.jpg 2x" style="margin-top: -10em; margin-bottom: -10em">-->
-<div class="wibbly-element" 
+<div class="wibbly-element wib-loading" 
     data-top="0 0.5 0.33 1 0.66 0 1 0.5" 
     data-bottom="0 1 0.33 0 0.66 0 1 1" 
     data-background="video test/video" 
@@ -51,6 +54,7 @@
 </div>
     
 <script>
+    ImageBackground.SetFallbackColor('aqua');
     window.wibble = new WibblyElement(document.querySelector('.wibbly-element'));
 </script>
 

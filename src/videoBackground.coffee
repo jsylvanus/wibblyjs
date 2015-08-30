@@ -7,8 +7,15 @@ class @VideoBackground extends @BackgroundStrategy
     @requiresRedrawing = yes
     throw "No HTML5 video support detected" if not @detectVideoSupport()
     
+    @fallback = @createImageBackground("#{baseurl}.jpg")
     @video = @createVideoElement(baseurl)
-    document.video_test = @video
+
+
+  createImageBackground : (imageurl) ->
+    fallback = new ImageBackground(imageurl)
+    fallback.setCallback( => @callback() if @callback isnt null )
+    return fallback
+    
 
 
   createVideoElement : (baseurl) ->
@@ -46,7 +53,7 @@ class @VideoBackground extends @BackgroundStrategy
 
 
   renderToCanvas : (element, context, dTime = 0) ->
-    return if not @ready
+    return @fallback?.renderToCanvas(element, context, dTime) if not @ready
 
     dims = @getDimensions element
     box = @getRenderBox(dims, @video)

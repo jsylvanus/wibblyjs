@@ -717,7 +717,15 @@
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
   this.ImageBackground = (function(_super) {
+    var fallbackColor;
+
     __extends(ImageBackground, _super);
+
+    fallbackColor = '#000';
+
+    ImageBackground.SetFallbackColor = function(colorstring) {
+      return fallbackColor = colorstring;
+    };
 
     function ImageBackground(url) {
       ImageBackground.__super__.constructor.call(this);
@@ -729,15 +737,16 @@
       } else {
         throw "url provided to ImageBackground constructor must be string or array";
       }
+      this.fallback = new SolidBackground(fallbackColor);
     }
 
     ImageBackground.prototype.renderToCanvas = function(element, context, dTime) {
-      var box, dims;
+      var box, dims, _ref;
       if (dTime == null) {
         dTime = 0;
       }
       if (!this.ready) {
-        return;
+        return (_ref = this.fallback) != null ? _ref.renderToCanvas(element, context, dTime) : void 0;
       }
       dims = this.getDimensions(element);
       box = this.getRenderBox(dims, this.imageCanvas);
@@ -849,9 +858,21 @@
       if (!this.detectVideoSupport()) {
         throw "No HTML5 video support detected";
       }
+      this.fallback = this.createImageBackground("" + baseurl + ".jpg");
       this.video = this.createVideoElement(baseurl);
-      document.video_test = this.video;
     }
+
+    VideoBackground.prototype.createImageBackground = function(imageurl) {
+      var fallback,
+        _this = this;
+      fallback = new ImageBackground(imageurl);
+      fallback.setCallback(function() {
+        if (_this.callback !== null) {
+          return _this.callback();
+        }
+      });
+      return fallback;
+    };
 
     VideoBackground.prototype.createVideoElement = function(baseurl) {
       var video,
@@ -893,12 +914,12 @@
     };
 
     VideoBackground.prototype.renderToCanvas = function(element, context, dTime) {
-      var box, dims;
+      var box, dims, _ref;
       if (dTime == null) {
         dTime = 0;
       }
       if (!this.ready) {
-        return;
+        return (_ref = this.fallback) != null ? _ref.renderToCanvas(element, context, dTime) : void 0;
       }
       dims = this.getDimensions(element);
       box = this.getRenderBox(dims, this.video);
@@ -975,8 +996,13 @@
       this.loadBackground(this.element);
       this.createCanvas();
       this.hookEvents();
+      this.removeLoadingClass(this.element);
       this.adjustCanvas();
     }
+
+    WibblyElement.prototype.removeLoadingClass = function(element) {
+      return element.className = element.className.replace(/\bwib-loading\b/, '');
+    };
 
     WibblyElement.prototype.isCompositeSupported = function() {
       var ctx, test;
@@ -1111,9 +1137,7 @@
         timestamp = 0;
       }
       this.drawing = true;
-      if (this.background.ready) {
-        this.background.renderToCanvas(this.canvas, this.context, timestamp);
-      }
+      this.background.renderToCanvas(this.canvas, this.context, timestamp);
       if (this.compositeSupported) {
         this.bezierMask.drawClippingShape(this.context, dims);
       }

@@ -17,8 +17,12 @@ class @WibblyElement
     @loadBackground(@element)
     @createCanvas()
     @hookEvents()
+    @removeLoadingClass(@element)
     @adjustCanvas()
 
+
+  removeLoadingClass : (element) ->
+    element.className = element.className.replace(/\bwib-loading\b/, '')
 
   isCompositeSupported : ->
     test = document.createElement 'canvas'
@@ -147,7 +151,7 @@ class @WibblyElement
 
     @drawing = true
 
-    @background.renderToCanvas(@canvas, @context, timestamp) if @background.ready
+    @background.renderToCanvas(@canvas, @context, timestamp)
     if @compositeSupported # faster composite operation version
       @bezierMask.drawClippingShape(@context, dims)
 

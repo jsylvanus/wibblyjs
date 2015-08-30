@@ -1,5 +1,10 @@
 
 class @ImageBackground extends @BackgroundStrategy
+  
+  fallbackColor = '#000'
+
+  @SetFallbackColor : (colorstring) ->
+    fallbackColor = colorstring
 
   constructor: (url) ->
     super()
@@ -10,14 +15,13 @@ class @ImageBackground extends @BackgroundStrategy
       @image = @createSrcSetImage(url)
     else
       throw "url provided to ImageBackground constructor must be string or array"
+    @fallback = new SolidBackground(fallbackColor)
 
 
   # Draw image to canvas, scaling to fit within the allowed space, centered.
-  # Does nothing if @ready is false
-  # 
   # TODO: refactor to allow different positioning from center
   renderToCanvas : (element, context, dTime = 0) ->
-    return if not @ready
+    return @fallback?.renderToCanvas(element, context, dTime) if not @ready
 
     dims = @getDimensions element
     box = @getRenderBox(dims, @imageCanvas)
