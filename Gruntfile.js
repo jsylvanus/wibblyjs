@@ -32,6 +32,7 @@ module.exports = function(grunt) {
 					'build/dimensions.js',
     				'build/Layer.js',
 					'build/scalableBezier.js',
+    				'build/BezierMask.js',
 					'build/backgroundTransition.js',
 					'build/backgroundStrategy.js',
 					'build/imageBackground.js',

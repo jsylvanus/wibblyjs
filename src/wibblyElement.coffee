@@ -6,14 +6,16 @@ class @WibblyElement
     @drawing = false
     @adjusting = false
     @adjustTimeout = null
-    @clipCanvas = null
     @transitions = []
     @frames = new FrameManager()
     @compositeSupported = @isCompositeSupported()
     @animationRunning = no
     @element.style.position = 'relative'
-    @top = @loadBezier(@element, 'data-top')
-    @bottom = @loadBezier(@element, 'data-bottom')
+
+    @top = ScalableBezier.FromAttribute @element, 'data-top'
+    @bottom = ScalableBezier.FromAttribute @element, 'data-bottom'
+    @bezierMask = new BigSea.BezierMask @top, @bottom
+
     @loadBackground(@element)
     @createCanvas()
     @hookEvents()
@@ -25,17 +27,6 @@ class @WibblyElement
     ctx = test.getContext '2d'
     ctx.globalCompositeOperation = 'destination-in'
     return ctx.globalCompositeOperation is 'destination-in'
-
-
-  # loads a bezier attribute into a ScalableBezier object
-  loadBezier: (element, attrib) ->
-    test = element.attributes.getNamedItem(attrib)
-    return null if test is null # isn't set
-
-    attr = test.value.split(' ').map(parseFloat)
-    throw "bezier requires 8 points" if attr.length < 8
-
-    new ScalableBezier(attr[0], attr[1], attr[2], attr[3], attr[4], attr[5], attr[6], attr[7])
 
 
   # Loads data-background attribute into a BackgroundStrategy subclass
@@ -153,97 +144,17 @@ class @WibblyElement
       @animationRunning = no
 
 
-  updateClippingCanvas : (dims) ->
-    @clipCanvas.width = dims.width
-    @clipCanvas.height = dims.height + Math.abs(dims.topMargin) + Math.abs(dims.bottomMargin)
-
-    @clipContext.beginPath()
-
-    # if top bezier exists, apply to canvas, else just draw the surrounding box points
-    if @top isnt null
-      topBezier = @top.scale(dims.width, Math.abs(dims.topMargin))
-      @clipContext.moveTo(topBezier.startX, topBezier.startY)
-      topBezier.applyToCanvas(@clipContext)
-    else
-      @clipContext.moveTo(0,0)
-      @clipContext.lineTo(dims.width, 0)
-
-    # if bottom bezier exists, apply to canvas, else just draw the surrounding box points
-    if @bottom isnt null
-      bottomBezier = @bottom.scale(dims.width, Math.abs(dims.bottomMargin)).reverse()
-      bottomBezier.applyToCanvas(@clipContext, 0, dims.height + Math.abs(dims.topMargin))
-    else
-      @clipContext.lineTo(dims.width, dims.height + Math.abs(dims.topMargin) + Math.abs(dims.bottomMargin))
-      @clipContext.lineTo(0, dims.height + Math.abs(dims.topMargin) + Math.abs(dims.bottomMargin))
-
-    @clipContext.closePath()
-    @clipContext.fill()
-
-  drawClippingShape : (dims) ->
-    
-    vDims = new Vector(dims.width, dims.height + Math.abs(dims.topMargin) + Math.abs(dims.bottomMargin))
-
-    # create clipping canvas
-    if @clipCanvas is null
-      @clipCanvas = document.createElement('canvas')
-      @clipCanvas.width = dims.width
-      @clipCanvas.height = dims.height
-      @clipContext = @clipCanvas.getContext('2d')
-      @updateClippingCanvas(dims)
-      @lastDims = vDims
-
-    if not vDims.equals(@lastDims)
-      @updateClippingCanvas(dims)
-      @lastDims = vDims
-
-    @context.save()
-    @context.globalCompositeOperation = 'destination-in'
-    @context.drawImage(@clipContext.canvas, 0, 0, vDims.values[0], vDims.values[1])
-    @context.restore()
-
-
   # Draws the bezier mask and background
   draw : (dims, timestamp = 0) =>
 
     @drawing = true
+
+    @background.renderToCanvas(@canvas, @context, timestamp) if @background.ready
     if @compositeSupported # faster composite operation version
+      @bezierMask.drawClippingShape(@context, dims)
 
-      #===== v1
-      # # @context.clearRect(0,0,@canvas.width, @canvas.height)
-      # # draw the background first
-      # @context.globalCompositeOperation = 'source-over'
-      # @background.renderToCanvas(@canvas, @context, timestamp) if @background.ready
-      # 
-      # # handle transitions
-      # @processTransitions dims, timestamp
+    @processTransitions dims, timestamp
 
-      # # then mask it via destination-in compositing (much faster than clipping video)
-      # @context.globalCompositeOperation = 'destination-in'
-      # @drawClippingShape(dims)
-
-      #====== v2
-
-      @background.renderToCanvas(@canvas, @context, timestamp) if @background.ready
-      @drawClippingShape(dims)
-
-      # handle transitions
-      @processTransitions dims, timestamp
-
-
-    else # slow version
-
-      # draw the clipping mask
-      # NO CLIPPING WITHOUT COMPOSITE
-      # @drawClippingShape(dims)
-      # @context.fill()
-      # @context.clip()
-      @context.fillRect(0,0,@canvas.width,@canvas.height)
-
-      # draw the background into the clipping region
-      @background.renderToCanvas(@canvas, @context, timestamp) if @background.ready
-
-      # handle transitions
-      @processTransitions dims, timestamp
     @drawing = false
 
 

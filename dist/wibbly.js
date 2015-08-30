@@ -337,6 +337,23 @@
 }).call(this);
 ;(function() {
   this.ScalableBezier = (function() {
+    ScalableBezier.FromAttribute = function(element, attribute) {
+      var attr, test;
+      test = element.attributes.getNamedItem(attribute);
+      if (test === null) {
+        return null;
+      }
+      attr = test.value.split(' ').map(parseFloat);
+      if (attr.length < 8) {
+        throw "bezier requires 8 points";
+      }
+      return (function(func, args, ctor) {
+        ctor.prototype = func.prototype;
+        var child = new ctor, result = func.apply(child, args);
+        return Object(result) === result ? result : child;
+      })(ScalableBezier, attr, function(){});
+    };
+
     function ScalableBezier(startX, startY, controlX1, controlY1, controlX2, controlY2, endX, endY) {
       this.startX = startX;
       this.startY = startY;
@@ -423,6 +440,96 @@
     };
 
     return ScalableBezier;
+
+  })();
+
+}).call(this);
+;(function() {
+  if (this.BigSea == null) {
+    this.BigSea = {};
+  }
+
+  this.BigSea.BezierMask = (function() {
+    var abs, clipCanvas, clipContext, updateCanvasDimensions;
+
+    clipCanvas = null;
+
+    clipContext = null;
+
+    abs = Math.abs;
+
+    updateCanvasDimensions = function(dims) {
+      clipCanvas.width = dims.width;
+      return clipCanvas.height = dims.height + abs(dims.topMargin) + abs(dims.bottomMargin);
+    };
+
+    function BezierMask(top, bottom) {
+      this.top = top;
+      this.bottom = bottom;
+      this.createClipCanvas();
+    }
+
+    BezierMask.prototype.createClipCanvas = function() {
+      clipCanvas = document.createElement('canvas');
+      clipCanvas.width = 1;
+      clipCanvas.height = 1;
+      return clipContext = clipCanvas.getContext('2d');
+    };
+
+    BezierMask.prototype.updateClippingCanvas = function(dims) {
+      updateCanvasDimensions(dims);
+      clipContext.beginPath();
+      this.drawTop(dims);
+      this.drawBottom(dims);
+      clipContext.closePath();
+      return clipContext.fill();
+    };
+
+    BezierMask.prototype.drawTop = function(dims) {
+      var topBezier;
+      if (this.top !== null) {
+        topBezier = this.top.scale(dims.width, abs(dims.topMargin));
+        clipContext.moveTo(topBezier.startX, topBezier.startY);
+        return topBezier.applyToCanvas(clipContext);
+      } else {
+        clipContext.moveTo(0, 0);
+        return clipContext.lineTo(dims.width, 0);
+      }
+    };
+
+    BezierMask.prototype.drawBottom = function(dims) {
+      var bottomBezier;
+      if (this.bottom !== null) {
+        bottomBezier = this.bottom.scale(dims.width, abs(dims.bottomMargin)).reverse();
+        return bottomBezier.applyToCanvas(clipContext, 0, dims.height + abs(dims.topMargin));
+      } else {
+        clipContext.lineTo(dims.width, dims.height + abs(dims.topMargin) + abs(dims.bottomMargin));
+        return clipContext.lineTo(0, dims.height + abs(dims.topMargin) + abs(dims.bottomMargin));
+      }
+    };
+
+    BezierMask.prototype.drawClippingShape = function(context, dims) {
+      var fullDims, fullHeight;
+      fullHeight = dims.height + abs(dims.topMargin) + abs(dims.bottomMargin);
+      fullDims = {
+        w: dims.width,
+        h: fullHeight
+      };
+      if (this.lastDims == null) {
+        this.updateClippingCanvas(dims);
+        this.lastDims = fullDims;
+      }
+      if (!(fullDims.w === this.lastDims.w && fullDims.h === this.lastDims.h)) {
+        this.updateClippingCanvas(dims);
+        this.lastDims = vDims;
+      }
+      context.save();
+      context.globalCompositeOperation = 'destination-in';
+      context.drawImage(clipContext.canvas, 0, 0, fullDims.w, fullDims.h);
+      return context.restore();
+    };
+
+    return BezierMask;
 
   })();
 
@@ -851,14 +958,14 @@
       this.drawing = false;
       this.adjusting = false;
       this.adjustTimeout = null;
-      this.clipCanvas = null;
       this.transitions = [];
       this.frames = new FrameManager();
       this.compositeSupported = this.isCompositeSupported();
       this.animationRunning = false;
       this.element.style.position = 'relative';
-      this.top = this.loadBezier(this.element, 'data-top');
-      this.bottom = this.loadBezier(this.element, 'data-bottom');
+      this.top = ScalableBezier.FromAttribute(this.element, 'data-top');
+      this.bottom = ScalableBezier.FromAttribute(this.element, 'data-bottom');
+      this.bezierMask = new BigSea.BezierMask(this.top, this.bottom);
       this.loadBackground(this.element);
       this.createCanvas();
       this.hookEvents();
@@ -871,19 +978,6 @@
       ctx = test.getContext('2d');
       ctx.globalCompositeOperation = 'destination-in';
       return ctx.globalCompositeOperation === 'destination-in';
-    };
-
-    WibblyElement.prototype.loadBezier = function(element, attrib) {
-      var attr, test;
-      test = element.attributes.getNamedItem(attrib);
-      if (test === null) {
-        return null;
-      }
-      attr = test.value.split(' ').map(parseFloat);
-      if (attr.length < 8) {
-        throw "bezier requires 8 points";
-      }
-      return new ScalableBezier(attr[0], attr[1], attr[2], attr[3], attr[4], attr[5], attr[6], attr[7]);
     };
 
     WibblyElement.prototype.loadBackground = function(element) {
@@ -1006,69 +1100,18 @@
       }
     };
 
-    WibblyElement.prototype.updateClippingCanvas = function(dims) {
-      var bottomBezier, topBezier;
-      this.clipCanvas.width = dims.width;
-      this.clipCanvas.height = dims.height + Math.abs(dims.topMargin) + Math.abs(dims.bottomMargin);
-      this.clipContext.beginPath();
-      if (this.top !== null) {
-        topBezier = this.top.scale(dims.width, Math.abs(dims.topMargin));
-        this.clipContext.moveTo(topBezier.startX, topBezier.startY);
-        topBezier.applyToCanvas(this.clipContext);
-      } else {
-        this.clipContext.moveTo(0, 0);
-        this.clipContext.lineTo(dims.width, 0);
-      }
-      if (this.bottom !== null) {
-        bottomBezier = this.bottom.scale(dims.width, Math.abs(dims.bottomMargin)).reverse();
-        bottomBezier.applyToCanvas(this.clipContext, 0, dims.height + Math.abs(dims.topMargin));
-      } else {
-        this.clipContext.lineTo(dims.width, dims.height + Math.abs(dims.topMargin) + Math.abs(dims.bottomMargin));
-        this.clipContext.lineTo(0, dims.height + Math.abs(dims.topMargin) + Math.abs(dims.bottomMargin));
-      }
-      this.clipContext.closePath();
-      return this.clipContext.fill();
-    };
-
-    WibblyElement.prototype.drawClippingShape = function(dims) {
-      var vDims;
-      vDims = new Vector(dims.width, dims.height + Math.abs(dims.topMargin) + Math.abs(dims.bottomMargin));
-      if (this.clipCanvas === null) {
-        this.clipCanvas = document.createElement('canvas');
-        this.clipCanvas.width = dims.width;
-        this.clipCanvas.height = dims.height;
-        this.clipContext = this.clipCanvas.getContext('2d');
-        this.updateClippingCanvas(dims);
-        this.lastDims = vDims;
-      }
-      if (!vDims.equals(this.lastDims)) {
-        this.updateClippingCanvas(dims);
-        this.lastDims = vDims;
-      }
-      this.context.save();
-      this.context.globalCompositeOperation = 'destination-in';
-      this.context.drawImage(this.clipContext.canvas, 0, 0, vDims.values[0], vDims.values[1]);
-      return this.context.restore();
-    };
-
     WibblyElement.prototype.draw = function(dims, timestamp) {
       if (timestamp == null) {
         timestamp = 0;
       }
       this.drawing = true;
-      if (this.compositeSupported) {
-        if (this.background.ready) {
-          this.background.renderToCanvas(this.canvas, this.context, timestamp);
-        }
-        this.drawClippingShape(dims);
-        this.processTransitions(dims, timestamp);
-      } else {
-        this.context.fillRect(0, 0, this.canvas.width, this.canvas.height);
-        if (this.background.ready) {
-          this.background.renderToCanvas(this.canvas, this.context, timestamp);
-        }
-        this.processTransitions(dims, timestamp);
+      if (this.background.ready) {
+        this.background.renderToCanvas(this.canvas, this.context, timestamp);
       }
+      if (this.compositeSupported) {
+        this.bezierMask.drawClippingShape(this.context, dims);
+      }
+      this.processTransitions(dims, timestamp);
       return this.drawing = false;
     };
 

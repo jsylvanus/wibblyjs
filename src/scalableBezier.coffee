@@ -1,5 +1,15 @@
 
 class @ScalableBezier
+
+  @FromAttribute : (element, attribute) ->
+    test = element.attributes.getNamedItem(attribute)
+    return null if test is null # isn't set
+
+    attr = test.value.split(' ').map(parseFloat)
+    throw "bezier requires 8 points" if attr.length < 8
+
+    new ScalableBezier(attr...)
+
   
   constructor: (@startX, @startY, @controlX1, @controlY1, @controlX2, @controlY2, @endX, @endY) ->
     null
