@@ -450,7 +450,9 @@
   }
 
   this.BigSea.BezierMask = (function() {
-    var abs, clipCanvas, clipContext, updateCanvasDimensions;
+    var abs;
+
+    abs = Math.abs;
 
     BezierMask.fromElementAttributes = function(element) {
       var bottom, top;
@@ -459,49 +461,43 @@
       return new BigSea.BezierMask(top, bottom);
     };
 
-    clipCanvas = null;
-
-    clipContext = null;
-
-    abs = Math.abs;
-
-    updateCanvasDimensions = function(dims) {
-      clipCanvas.width = dims.width;
-      return clipCanvas.height = dims.height + abs(dims.topMargin) + abs(dims.bottomMargin);
+    BezierMask.updateCanvasDimensions = function(dims) {
+      this.clipCanvas.width = dims.width;
+      return this.clipCanvas.height = this.totalHeight(dims);
     };
 
     function BezierMask(top, bottom) {
-      this.top = top;
-      this.bottom = bottom;
+      this.top = top != null ? top : null;
+      this.bottom = bottom != null ? bottom : null;
       this.createClipCanvas();
       this.lastDims = null;
     }
 
     BezierMask.prototype.createClipCanvas = function() {
-      clipCanvas = document.createElement('canvas');
-      clipCanvas.width = 1;
-      clipCanvas.height = 1;
-      return clipContext = clipCanvas.getContext('2d');
+      this.clipCanvas = document.createElement('canvas');
+      this.clipCanvas.width = 1;
+      this.clipCanvas.height = 1;
+      return this.clipContext = this.clipCanvas.getContext('2d');
     };
 
     BezierMask.prototype.updateClippingCanvas = function(dims) {
-      updateCanvasDimensions(dims);
-      clipContext.beginPath();
+      this.updateCanvasDimensions(dims);
+      this.clipContext.beginPath();
       this.drawTop(dims);
       this.drawBottom(dims);
-      clipContext.closePath();
-      return clipContext.fill();
+      this.clipContext.closePath();
+      return this.clipContext.fill();
     };
 
     BezierMask.prototype.drawTop = function(dims) {
       var topBezier;
       if (this.top !== null) {
         topBezier = this.top.scale(dims.width, abs(dims.topMargin));
-        clipContext.moveTo(topBezier.startX, topBezier.startY);
-        return topBezier.applyToCanvas(clipContext);
+        this.clipContext.moveTo(topBezier.startX, topBezier.startY);
+        return topBezier.applyToCanvas(this.clipContext);
       } else {
-        clipContext.moveTo(0, 0);
-        return clipContext.lineTo(dims.width, 0);
+        this.clipContext.moveTo(0, 0);
+        return this.clipContext.lineTo(dims.width, 0);
       }
     };
 
@@ -509,19 +505,18 @@
       var bottomBezier;
       if (this.bottom !== null) {
         bottomBezier = this.bottom.scale(dims.width, abs(dims.bottomMargin)).reverse();
-        return bottomBezier.applyToCanvas(clipContext, 0, dims.height + abs(dims.topMargin));
+        return bottomBezier.applyToCanvas(this.clipContext, 0, dims.height + abs(dims.topMargin));
       } else {
-        clipContext.lineTo(dims.width, dims.height + abs(dims.topMargin) + abs(dims.bottomMargin));
-        return clipContext.lineTo(0, dims.height + abs(dims.topMargin) + abs(dims.bottomMargin));
+        this.clipContext.lineTo(dims.width, this.totalHeight(dims));
+        return this.clipContext.lineTo(0, this.totalHeight(dims));
       }
     };
 
     BezierMask.prototype.drawClippingShape = function(context, dims) {
-      var fullDims, fullHeight;
-      fullHeight = dims.height + abs(dims.topMargin) + abs(dims.bottomMargin);
+      var fullDims;
       fullDims = {
         w: dims.width,
-        h: fullHeight
+        h: this.totalHeight(dims)
       };
       if (this.lastDims === null || !this.dimensionsMatch(this.lastDims, fullDims)) {
         this.updateClippingCanvas(dims);
@@ -529,12 +524,16 @@
       this.lastDims = fullDims;
       context.save();
       context.globalCompositeOperation = 'destination-in';
-      context.drawImage(clipContext.canvas, 0, 0, fullDims.w, fullDims.h);
+      context.drawImage(this.clipContext.canvas, 0, 0, fullDims.w, fullDims.h);
       return context.restore();
     };
 
     BezierMask.prototype.dimensionsMatch = function(last, latest) {
       return last.w === latest.w && last.h === latest.h;
+    };
+
+    BezierMask.prototype.totalHeight = function(dims) {
+      return dims.height + abs(dims.topMargin) + abs(dims.bottomMargin);
     };
 
     return BezierMask;
