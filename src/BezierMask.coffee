@@ -9,7 +9,7 @@ class @BigSea.BezierMask
     bottom = ScalableBezier.FromAttribute element, 'data-bottom'
     new BigSea.BezierMask top, bottom
 
-  @updateCanvasDimensions = (dims) ->
+  updateCanvasDimensions : (dims) ->
     @clipCanvas.width = dims.width
     @clipCanvas.height = @totalHeight(dims)
 

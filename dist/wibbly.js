@@ -461,7 +461,7 @@
       return new BigSea.BezierMask(top, bottom);
     };
 
-    BezierMask.updateCanvasDimensions = function(dims) {
+    BezierMask.prototype.updateCanvasDimensions = function(dims) {
       this.clipCanvas.width = dims.width;
       return this.clipCanvas.height = this.totalHeight(dims);
     };
