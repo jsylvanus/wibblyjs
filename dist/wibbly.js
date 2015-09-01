@@ -1072,15 +1072,12 @@
     WibblyElement.AnimationManager = new BigSea.AnimationManager();
 
     function WibblyElement(element) {
-      var _base;
       this.element = element;
       this.draw = __bind(this.draw, this);
       this.redraw_needed = false;
       this.transitions = [];
       this.compositeSupported = this.isCompositeSupported();
-      if ((_base = this.element.style).position == null) {
-        _base.position = 'relative';
-      }
+      this.element.style.position = 'relative';
       this.bezierMask = BigSea.BezierMask.fromElementAttributes(this.element);
       this.loadBackground(this.element);
       this.createCanvas();

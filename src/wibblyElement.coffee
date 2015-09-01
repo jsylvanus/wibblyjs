@@ -8,7 +8,7 @@ class @WibblyElement
     @transitions = []
 
     @compositeSupported = @isCompositeSupported()
-    @element.style.position ?= 'relative'
+    @element.style.position = 'relative'
 
     @bezierMask = BigSea.BezierMask.fromElementAttributes(@element)
     @loadBackground(@element)
