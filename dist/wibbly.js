@@ -977,26 +977,116 @@
 ;(function() {
   var __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
 
+  if (this.BigSea == null) {
+    this.BigSea = {};
+  }
+
+  this.BigSea.AnimationManager = (function() {
+    function AnimationManager() {
+      this.frame = __bind(this.frame, this);
+      this.onResizeEvent = __bind(this.onResizeEvent, this);
+      this.wibblyElementList = [];
+      this.resize_flagged = true;
+      this.running = false;
+      this.raf_confirmed = false;
+      window.addEventListener('resize', this.onResizeEvent);
+    }
+
+    AnimationManager.prototype.onResizeEvent = function() {
+      this.resize_flagged = true;
+      if (!this.raf_confirmed) {
+        this.resizeAll();
+        return this.redraw(0, true);
+      }
+    };
+
+    AnimationManager.prototype.register = function(element) {
+      this.wibblyElementList.push(element);
+      if (!this.running) {
+        this.running = true;
+        return requestAnimationFrame(this.frame);
+      }
+    };
+
+    AnimationManager.prototype.frame = function(timestamp) {
+      if (timestamp == null) {
+        timestamp = 0;
+      }
+      this.raf_confirmed = true;
+      this.running = true;
+      requestAnimationFrame(this.frame);
+      if (this.needsResize()) {
+        this.resizeAll();
+        return this.redraw(timestamp, true);
+      } else {
+        return this.redraw(timestamp);
+      }
+    };
+
+    AnimationManager.prototype.redraw = function(timestamp, force) {
+      var item, _i, _len, _ref, _results;
+      if (force == null) {
+        force = false;
+      }
+      _ref = this.wibblyElementList;
+      _results = [];
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        item = _ref[_i];
+        if (force || item.needsAnimation()) {
+          _results.push(item.draw(timestamp));
+        } else {
+          _results.push(void 0);
+        }
+      }
+      return _results;
+    };
+
+    AnimationManager.prototype.needsResize = function() {
+      if (!this.resize_flagged) {
+        return false;
+      }
+      this.resize_flagged = false;
+      return true;
+    };
+
+    AnimationManager.prototype.resizeAll = function() {
+      var item, _i, _len, _ref, _results;
+      _ref = this.wibblyElementList;
+      _results = [];
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        item = _ref[_i];
+        _results.push(item.resize());
+      }
+      return _results;
+    };
+
+    return AnimationManager;
+
+  })();
+
+}).call(this);
+;(function() {
+  var __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
+
   this.WibblyElement = (function() {
+    var animation_manager;
+
+    animation_manager = new BigSea.AnimationManager();
+
     function WibblyElement(element) {
+      var _base;
       this.element = element;
       this.draw = __bind(this.draw, this);
-      this.animatedDraw = __bind(this.animatedDraw, this);
-      this.lastDims = null;
-      this.drawing = false;
-      this.adjusting = false;
-      this.adjustTimeout = null;
       this.transitions = [];
-      this.frames = new FrameManager();
       this.compositeSupported = this.isCompositeSupported();
-      this.animationRunning = false;
-      this.element.style.position = 'relative';
+      if ((_base = this.element.style).position == null) {
+        _base.position = 'relative';
+      }
       this.bezierMask = BigSea.BezierMask.fromElementAttributes(this.element);
       this.loadBackground(this.element);
       this.createCanvas();
-      this.hookEvents();
       this.removeLoadingClass(this.element);
-      this.adjustCanvas();
+      animation_manager.register(this);
     }
 
     WibblyElement.prototype.removeLoadingClass = function(element) {
@@ -1020,7 +1110,7 @@
       }
       this.background = BackgroundStrategy.Factory(attribute.value);
       return this.background.setCallback(function() {
-        return _this.adjustCanvas();
+        return _this.redraw_needed = true;
       });
     };
 
@@ -1051,58 +1141,30 @@
       if (isNaN(dims.bottomMargin)) {
         dims.bottomMargin = 0;
       }
+      dims.totalHeight = dims.height + Math.abs(dims.topMargin) + Math.abs(dims.bottomMargin);
       return dims;
     };
 
-    WibblyElement.prototype.hookEvents = function() {
-      var _this = this;
-      return window.addEventListener('resize', function() {
-        return _this.adjustCanvas();
-      });
-    };
-
-    WibblyElement.prototype.adjustCanvas = function() {
-      var dims, height, tmpCanvas, tmpContext, width,
-        _this = this;
-      if (this.adjusting === true) {
-        if (this.adjustTimeout !== null) {
-          clearTimeout(this.adjustTimeout);
-          this.adjustTimeout = null;
-        }
-        this.adjustTimeout = setTimeout((function() {
-          return _this.adjustCanvas();
-        }), 1000 / 60);
-        return;
-      }
-      this.adjusting = true;
+    WibblyElement.prototype.resize = function() {
+      var dims, tmpCanvas, tmpContext;
       dims = this.getElementDimensions(this.element);
       this.canvas.style.top = "" + dims.topMargin + "px";
-      height = Math.abs(dims.topMargin) + Math.abs(dims.bottomMargin) + dims.height;
-      width = dims.width;
       tmpCanvas = document.createElement('canvas');
-      tmpCanvas.width = width;
-      tmpCanvas.height = height;
+      tmpCanvas.width = dims.width;
+      tmpCanvas.height = dims.totalHeight;
       tmpContext = tmpCanvas.getContext('2d');
-      tmpContext.drawImage(this.canvas, 0, 0, this.canvas.width, this.canvas.height, 0, 0, width, height);
-      this.canvas.width = width;
-      this.canvas.height = height;
-      this.canvas.style.width = "" + width + "px";
-      this.canvas.style.height = "" + height + "px";
-      this.context.drawImage(tmpContext.canvas, 0, 0, tmpCanvas.width, tmpCanvas.height, 0, 0, this.canvas.width, this.canvas.height);
-      if (this.animationRunning) {
-
-      } else if (!this.animationRunning && this.needsAnimation()) {
-        this.animatedDraw();
-      } else {
-        this.frames.queueFrame(function() {
-          return _this.draw(dims, 0);
-        });
-        this.frames.frame();
-      }
-      return this.adjusting = false;
+      tmpContext.drawImage(this.canvas, 0, 0, this.canvas.width, this.canvas.height, 0, 0, dims.width, dims.totalHeight);
+      this.canvas.width = dims.width;
+      this.canvas.height = dims.totalHeight;
+      this.canvas.style.width = "" + dims.width + "px";
+      this.canvas.style.height = "" + dims.totalHeight + "px";
+      return this.context.drawImage(tmpContext.canvas, 0, 0, tmpCanvas.width, tmpCanvas.height, 0, 0, this.canvas.width, this.canvas.height);
     };
 
     WibblyElement.prototype.needsAnimation = function() {
+      if (this.redraw_needed) {
+        return true;
+      }
       if (this.background.requiresRedrawing) {
         return true;
       }
@@ -1112,29 +1174,13 @@
       return false;
     };
 
-    WibblyElement.prototype.animatedDraw = function(timestamp) {
-      var dims,
-        _this = this;
+    WibblyElement.prototype.draw = function(timestamp) {
+      var dims;
       if (timestamp == null) {
         timestamp = 0;
       }
+      this.redraw_needed = false;
       dims = this.getElementDimensions(this.element);
-      this.frames.queueFrame(function() {
-        return _this.draw(dims, timestamp);
-      });
-      this.frames.frame();
-      if (this.needsAnimation()) {
-        this.animationRunning = true;
-        return requestAnimationFrame(this.animatedDraw);
-      } else {
-        return this.animationRunning = false;
-      }
-    };
-
-    WibblyElement.prototype.draw = function(dims, timestamp) {
-      if (timestamp == null) {
-        timestamp = 0;
-      }
       this.drawing = true;
       this.background.renderToCanvas(this.canvas, this.context, timestamp);
       if (this.compositeSupported) {
@@ -1169,7 +1215,7 @@
         }
       }
       if (!old_required_animation && this.background.requiresRedrawing) {
-        return this.adjustCanvas();
+        return this.redraw_needed = true;
       }
     };
 
@@ -1191,7 +1237,7 @@
         transition = new BackgroundTransition(new_background, duration);
         this.transitions.unshift(transition);
       }
-      return this.adjustCanvas();
+      return this.redraw_needed = true;
     };
 
     return WibblyElement;

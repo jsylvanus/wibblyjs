@@ -39,6 +39,7 @@ module.exports = function(grunt) {
 					'build/solidBackground.js',
 					'build/videoBackground.js',
 					'build/frameManager.js',
+					'build/AnimationManager.js',
 					'build/wibblyElement.js'
 	    		],
 	    		'dist/wibblytabs.js' : [

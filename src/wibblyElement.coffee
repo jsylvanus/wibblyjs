@@ -1,28 +1,24 @@
 
 class @WibblyElement
+
+  animation_manager = new BigSea.AnimationManager()
   
   constructor: (@element) ->
-    @lastDims = null
-    @drawing = false
-    @adjusting = false
-    @adjustTimeout = null
     @transitions = []
-    @frames = new FrameManager()
+
     @compositeSupported = @isCompositeSupported()
-    @animationRunning = no
-    @element.style.position = 'relative'
+    @element.style.position ?= 'relative'
 
     @bezierMask = BigSea.BezierMask.fromElementAttributes(@element)
-
     @loadBackground(@element)
     @createCanvas()
-    @hookEvents()
     @removeLoadingClass(@element)
-    @adjustCanvas()
+    animation_manager.register(@)
 
 
   removeLoadingClass : (element) ->
     element.className = element.className.replace(/\bwib-loading\b/, '')
+
 
   isCompositeSupported : ->
     test = document.createElement 'canvas'
@@ -38,7 +34,7 @@ class @WibblyElement
 
     @background = BackgroundStrategy.Factory attribute.value
     @background.setCallback =>
-      @adjustCanvas()
+      @redraw_needed = yes
 
 
   # Creats canvas element and 2d context
@@ -71,83 +67,51 @@ class @WibblyElement
     dims.topMargin = 0 if isNaN(dims.topMargin)
     dims.bottomMargin = 0 if isNaN(dims.bottomMargin)
 
+    dims.totalHeight = dims.height + Math.abs(dims.topMargin) + Math.abs(dims.bottomMargin)
+
     dims
 
   
-  # hooks window resize event
-  # TODO: throttle or debouce?
-  hookEvents : ->
-    window.addEventListener 'resize', =>
-      # adjusts canvas only if draw routine not already running
-      @adjustCanvas()
-
-  # Adjusts canvas to cover its containing element
-  adjustCanvas : ->
-    # console.log @background
-    if @adjusting is true
-      # console.log "delaying a resize"
-      if @adjustTimeout isnt null
-        clearTimeout(@adjustTimeout)
-        @adjustTimeout = null
-      @adjustTimeout = setTimeout((=> @adjustCanvas()), 1000/60)
-      return
-
-    @adjusting = true
+  resize : ->
 
     dims = @getElementDimensions @element
-    @canvas.style.top = "#{dims.topMargin}px"
 
-    height = Math.abs(dims.topMargin) + Math.abs(dims.bottomMargin) + dims.height
-    width = dims.width
+    @canvas.style.top = "#{dims.topMargin}px" # if margin has changed (vw units)
 
+    # @tempCanvas.copy(@canvas, dims)
     tmpCanvas = document.createElement('canvas')
-    tmpCanvas.width = width
-    tmpCanvas.height = height
+    tmpCanvas.width = dims.width
+    tmpCanvas.height = dims.totalHeight
     tmpContext = tmpCanvas.getContext('2d')
 
-    tmpContext.drawImage @canvas, 0, 0, @canvas.width, @canvas.height, 0, 0, width, height
+    tmpContext.drawImage @canvas,
+      0, 0, @canvas.width, @canvas.height,
+      0, 0, dims.width, dims.totalHeight
 
-    @canvas.width = width
-    @canvas.height = height
+    @canvas.width = dims.width
+    @canvas.height = dims.totalHeight
 
-    @canvas.style.width = "#{width}px"
-    @canvas.style.height = "#{height}px"
+    @canvas.style.width = "#{dims.width}px"
+    @canvas.style.height = "#{dims.totalHeight}px"
 
-    @context.drawImage(tmpContext.canvas, 0, 0, tmpCanvas.width, tmpCanvas.height, 0, 0, @canvas.width, @canvas.height)
-
-    if @animationRunning
-      # do nothing, it'll get caught on next frame
-    else if not @animationRunning and @needsAnimation()
-      @animatedDraw() # boot up animation if it isnt running yet
-    else
-      @frames.queueFrame(=> @draw(dims, 0))
-      # @draw(dims, timestamp)
-      @frames.frame()
-
-    @adjusting = false
+    @context.drawImage tmpContext.canvas,
+      0, 0, tmpCanvas.width, tmpCanvas.height,
+      0, 0, @canvas.width, @canvas.height
 
 
   needsAnimation : ->
+    # return no if not @isVisible()
+    return yes if @redraw_needed
     return yes if @background.requiresRedrawing
     return yes if @transitions.length > 0
     return no
 
 
-  animatedDraw : (timestamp = 0) =>
-    # console.log "animatedDraw"
+  draw : (timestamp = 0) =>
+
+    @redraw_needed = false # de-flag redraw since we're working on it...
+
     dims = @getElementDimensions(@element)
-    @frames.queueFrame(=> @draw(dims, timestamp))
-    @frames.frame()
-    # @draw(dims, timestamp)
-    if @needsAnimation()
-      @animationRunning = yes
-      requestAnimationFrame @animatedDraw
-    else
-      @animationRunning = no
-
-
-  # Draws the bezier mask and background
-  draw : (dims, timestamp = 0) =>
 
     @drawing = true
 
@@ -160,6 +124,7 @@ class @WibblyElement
     @drawing = false
 
 
+  # TODO: This is a refactoring target
   processTransitions : (dimensions, timestamp) ->
     # TODO: Transitioning to a video background is glitchy at end of transition
     return if @transitions.length is 0
@@ -179,11 +144,8 @@ class @WibblyElement
         break
 
     if not old_required_animation and @background.requiresRedrawing
-      @adjustCanvas() # reboot animation
-      
-    # process each object in @transitions queue
-    # finished transitions are popped off of the front of the queue into @background
-      
+      @redraw_needed = yes
+
 
   changeBackground : (backgroundString, duration = 0) ->
     # create new background object
@@ -201,6 +163,6 @@ class @WibblyElement
       # shove transition into @transitions queue
       @transitions.unshift transition
 
-    @adjustCanvas()
+    @redraw_needed = yes
 
     
