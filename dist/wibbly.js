@@ -1069,9 +1069,7 @@
   var __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
 
   this.WibblyElement = (function() {
-    var animation_manager;
-
-    animation_manager = new BigSea.AnimationManager();
+    WibblyElement.AnimationManager = new BigSea.AnimationManager();
 
     function WibblyElement(element) {
       var _base;
@@ -1086,7 +1084,7 @@
       this.loadBackground(this.element);
       this.createCanvas();
       this.removeLoadingClass(this.element);
-      animation_manager.register(this);
+      WibblyElement.AnimationManager.register(this);
     }
 
     WibblyElement.prototype.removeLoadingClass = function(element) {

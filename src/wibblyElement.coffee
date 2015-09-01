@@ -1,7 +1,7 @@
 
 class @WibblyElement
 
-  animation_manager = new BigSea.AnimationManager()
+  @AnimationManager : new BigSea.AnimationManager()
   
   constructor: (@element) ->
     @transitions = []
@@ -13,7 +13,7 @@ class @WibblyElement
     @loadBackground(@element)
     @createCanvas()
     @removeLoadingClass(@element)
-    animation_manager.register(@)
+    WibblyElement.AnimationManager.register(@)
 
 
   removeLoadingClass : (element) ->
