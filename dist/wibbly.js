@@ -1016,7 +1016,7 @@
         _this = this;
       attribute = element.attributes.getNamedItem('data-background');
       if (attribute === null) {
-        throw "No data-background attribute - attribute is required";
+        throw "missing required data-background attribute";
       }
       this.background = BackgroundStrategy.Factory(attribute.value);
       return this.background.setCallback(function() {

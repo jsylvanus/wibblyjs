@@ -34,7 +34,7 @@ class @WibblyElement
   # Loads data-background attribute into a BackgroundStrategy subclass
   loadBackground : (element) ->
     attribute = element.attributes.getNamedItem('data-background')
-    throw "No data-background attribute - attribute is required" if attribute is null
+    throw "missing required data-background attribute" if attribute is null
 
     @background = BackgroundStrategy.Factory attribute.value
     @background.setCallback =>
