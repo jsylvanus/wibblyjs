@@ -4,6 +4,7 @@ class @WibblyElement
   @AnimationManager : new BigSea.AnimationManager()
   
   constructor: (@element) ->
+    @redraw_needed = false
     @transitions = []
 
     @compositeSupported = @isCompositeSupported()

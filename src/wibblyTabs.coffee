@@ -35,7 +35,7 @@ class @WibblyTabs
     targetElement = @$ newTab.attr('href')
     @currentElement = targetElement.clone()
     @contentContainer.empty().append(@currentElement)
-    @wibbly.adjustCanvas() # adjust canvas to newly sized content
+    @wibbly.redraw_needed = yes
     
     # set new background on wibblyElement
     imagedata = @currentElement.data 'background'

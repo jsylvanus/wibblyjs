@@ -1075,6 +1075,7 @@
       var _base;
       this.element = element;
       this.draw = __bind(this.draw, this);
+      this.redraw_needed = false;
       this.transitions = [];
       this.compositeSupported = this.isCompositeSupported();
       if ((_base = this.element.style).position == null) {

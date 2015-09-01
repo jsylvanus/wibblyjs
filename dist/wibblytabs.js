@@ -168,7 +168,7 @@
       targetElement = this.$(newTab.attr('href'));
       this.currentElement = targetElement.clone();
       this.contentContainer.empty().append(this.currentElement);
-      this.wibbly.adjustCanvas();
+      this.wibbly.redraw_needed = true;
       imagedata = this.currentElement.data('background');
       return this.wibbly.changeBackground(imagedata, 1000);
     };
