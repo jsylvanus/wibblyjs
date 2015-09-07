@@ -55,7 +55,7 @@ class @WibblyElement
   
 
   getElementDimensions : (element) ->
-    @elementDims ?= new ElementDimensions
+    @elementDims ?= new BigSea.ElementDimensions
     @elementDims.updateFromElement(element)
 
   

@@ -1194,7 +1194,7 @@
 
     WibblyElement.prototype.getElementDimensions = function(element) {
       if (this.elementDims == null) {
-        this.elementDims = new ElementDimensions;
+        this.elementDims = new BigSea.ElementDimensions;
       }
       return this.elementDims.updateFromElement(element);
     };
