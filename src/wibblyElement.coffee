@@ -54,55 +54,27 @@ class @WibblyElement
     @element.appendChild @canvas
   
 
-  # gets useful dimension info about the element that we're scaling the canvas to
   getElementDimensions : (element) ->
-    style = element.currentStyle || window.getComputedStyle(element)
-  
-    dims =
-      width: Math.ceil(element.offsetWidth)
-      height: Math.ceil(element.offsetHeight)
-      topMargin: Math.ceil(parseFloat(style.marginTop))
-      bottomMargin: Math.ceil(parseFloat(style.marginBottom))
-
-    # sanity check: in IE these can return NAN if they aren't defined
-    dims.topMargin = 0 if isNaN(dims.topMargin)
-    dims.bottomMargin = 0 if isNaN(dims.bottomMargin)
-
-    dims.totalHeight = dims.height + Math.abs(dims.topMargin) + Math.abs(dims.bottomMargin)
-
-    dims
+    @elementDims ?= new ElementDimensions
+    @elementDims.updateFromElement(element)
 
   
   resize : ->
 
     dims = @getElementDimensions @element
-
-    @canvas.style.top = "#{dims.topMargin}px" # if margin has changed (vw units)
+    
+    # change top margin in case margin has changed (e.g. vw units)
+    @canvas.style.top = "#{dims.topMargin}px"
 
     @tmpCanvas ?= new BigSea.TemporaryCanvas
     @tmpCanvas.copyCanvas(@canvas)
 
-    # @tempCanvas.copy(@canvas, dims)
-    # tmpCanvas = document.createElement('canvas')
-    # tmpCanvas.width = dims.width
-    # tmpCanvas.height = dims.totalHeight
-    # tmpContext = tmpCanvas.getContext('2d')
-
-    # tmpContext.drawImage @canvas,
-    #   0, 0, @canvas.width, @canvas.height,
-    #   0, 0, dims.width, dims.totalHeight
-
     @canvas.width = dims.width
     @canvas.height = dims.totalHeight
-
     @canvas.style.width = "#{dims.width}px"
     @canvas.style.height = "#{dims.totalHeight}px"
 
     @tmpCanvas.restoreToContext(@context)
-
-    # @context.drawImage tmpContext.canvas,
-    #   0, 0, tmpCanvas.width, tmpCanvas.height,
-    #   0, 0, @canvas.width, @canvas.height
 
 
   needsAnimation : ->

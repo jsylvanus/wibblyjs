@@ -570,6 +570,48 @@
 
 }).call(this);
 ;(function() {
+  if (this.BigSea == null) {
+    this.BigSea = {};
+  }
+
+  this.BigSea.ElementDimensions = (function() {
+    var abs, ceil;
+
+    abs = Math.abs;
+
+    ceil = Math.ceil;
+
+    function ElementDimensions() {
+      this.width = 0;
+      this.height = 0;
+      this.topMargin = 0;
+      this.bottomMargin = 0;
+      this.totalHeight = 0;
+    }
+
+    ElementDimensions.prototype.updateFromElement = function(element) {
+      var style;
+      style = element.currentStyle || window.getComputedStyle(element);
+      this.width = ceil(element.offsetWidth);
+      this.height = ceil(element.offsetHeight);
+      this.topMargin = ceil(parseFloat(style.marginTop));
+      this.bottomMargin = ceil(parseFloat(style.marginBottom));
+      if (isNaN(this.topMargin)) {
+        this.topMargin = 0;
+      }
+      if (isNaN(this.bottomMargin)) {
+        this.bottomMargin = 0;
+      }
+      this.totalHeight = this.height + abs(this.topMargin) + abs(this.bottomMargin);
+      return this;
+    };
+
+    return ElementDimensions;
+
+  })();
+
+}).call(this);
+;(function() {
   this.BackgroundTransition = (function() {
     function BackgroundTransition(background, duration) {
       this.background = background;
@@ -1151,22 +1193,10 @@
     };
 
     WibblyElement.prototype.getElementDimensions = function(element) {
-      var dims, style;
-      style = element.currentStyle || window.getComputedStyle(element);
-      dims = {
-        width: Math.ceil(element.offsetWidth),
-        height: Math.ceil(element.offsetHeight),
-        topMargin: Math.ceil(parseFloat(style.marginTop)),
-        bottomMargin: Math.ceil(parseFloat(style.marginBottom))
-      };
-      if (isNaN(dims.topMargin)) {
-        dims.topMargin = 0;
+      if (this.elementDims == null) {
+        this.elementDims = new ElementDimensions;
       }
-      if (isNaN(dims.bottomMargin)) {
-        dims.bottomMargin = 0;
-      }
-      dims.totalHeight = dims.height + Math.abs(dims.topMargin) + Math.abs(dims.bottomMargin);
-      return dims;
+      return this.elementDims.updateFromElement(element);
     };
 
     WibblyElement.prototype.resize = function() {
