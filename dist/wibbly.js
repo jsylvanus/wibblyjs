@@ -1016,35 +1016,6 @@
 
 }).call(this);
 ;(function() {
-  this.FrameManager = (function() {
-    function FrameManager() {
-      this.frameid = 0;
-      this.nextFrame = null;
-      this.debug = false;
-    }
-
-    FrameManager.prototype.queueFrame = function(callback) {
-      this.nextFrame = callback;
-      return this.frameid = Math.random();
-    };
-
-    FrameManager.prototype.frame = function() {
-      var callFrame;
-      callFrame = this.nextFrame;
-      if (this.debug) {
-        console.log(this.frameid);
-      }
-      if (callFrame !== null) {
-        return callFrame();
-      }
-    };
-
-    return FrameManager;
-
-  })();
-
-}).call(this);
-;(function() {
   var __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
 
   if (this.BigSea == null) {
