@@ -841,9 +841,6 @@
       var img,
         _this = this;
       img = document.createElement('img');
-      if (typeof console !== "undefined" && console !== null) {
-        console.log("created image for url " + url);
-      }
       img.addEventListener('load', function() {
         return _this.setReady();
       });
@@ -858,8 +855,7 @@
       this.imageCanvas.width = dims.width();
       this.imageCanvas.height = dims.height();
       this.imageContext = this.imageCanvas.getContext('2d');
-      this.imageContext.drawImage(this.image, 0, 0);
-      return typeof console !== "undefined" && console !== null ? console.log("created canvas source for image", this) : void 0;
+      return this.imageContext.drawImage(this.image, 0, 0);
     };
 
     ImageBackground.prototype.setReady = function() {
