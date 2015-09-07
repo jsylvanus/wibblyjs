@@ -1182,13 +1182,11 @@
 
     WibblyElement.prototype.createCanvas = function() {
       this.canvas = document.createElement('canvas');
+      this.context = this.canvas.getContext('2d');
       this.canvas.style.position = "absolute";
       this.canvas.style.left = 0;
       this.canvas.style.top = 0;
       this.canvas.style.zIndex = -1;
-      this.context = this.canvas.getContext('2d');
-      this.context.globalCompositeOperation = 'source-over';
-      this.context.save();
       return this.element.appendChild(this.canvas);
     };
 
@@ -1232,9 +1230,9 @@
       if (timestamp == null) {
         timestamp = 0;
       }
+      this.drawing = true;
       this.redraw_needed = false;
       dims = this.getElementDimensions(this.element);
-      this.drawing = true;
       this.background.renderToCanvas(this.canvas, this.context, timestamp);
       if (this.compositeSupported) {
         this.bezierMask.drawClippingShape(this.context, dims);

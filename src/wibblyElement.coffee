@@ -41,15 +41,12 @@ class @WibblyElement
   # Creats canvas element and 2d context
   createCanvas : ->
     @canvas = document.createElement 'canvas'
+    @context = @canvas.getContext '2d'
 
     @canvas.style.position = "absolute"
     @canvas.style.left = 0
     @canvas.style.top = 0
     @canvas.style.zIndex = -1
-
-    @context = @canvas.getContext '2d'
-    @context.globalCompositeOperation = 'source-over'
-    @context.save()
 
     @element.appendChild @canvas
   
@@ -87,16 +84,13 @@ class @WibblyElement
 
   draw : (timestamp = 0) =>
 
+    @drawing = true
     @redraw_needed = false # de-flag redraw since we're working on it...
 
     dims = @getElementDimensions(@element)
-
-    @drawing = true
-
     @background.renderToCanvas(@canvas, @context, timestamp)
     if @compositeSupported # faster composite operation version
       @bezierMask.drawClippingShape(@context, dims)
-
     @processTransitions dims, timestamp
 
     @drawing = false
