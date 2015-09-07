@@ -1,7 +1,7 @@
 @BigSea ?= {}
 
 
-class @BigSea.AnimationManager
+class @BigSea.AnimationFrameDispatch
 
 
   constructor : ->

@@ -542,6 +542,34 @@
 
 }).call(this);
 ;(function() {
+  if (this.BigSea == null) {
+    this.BigSea = {};
+  }
+
+  this.BigSea.TemporaryCanvas = (function() {
+    function TemporaryCanvas() {
+      this.internalCanvas = document.createElement('canvas');
+      this.internalContext = this.internalCanvas.getContext('2d');
+    }
+
+    TemporaryCanvas.prototype.copyCanvas = function(otherCanvas) {
+      this.internalCanvas.width = otherCanvas.width;
+      this.internalCanvas.height = otherCanvas.height;
+      return this.internalContext.drawImage(otherCanvas, 0, 0);
+    };
+
+    TemporaryCanvas.prototype.restoreToContext = function(otherContext) {
+      var otherCanvas;
+      otherCanvas = otherContext.canvas;
+      return otherContext.drawImage(this.internalCanvas, 0, 0, otherCanvas.width, otherCanvas.height);
+    };
+
+    return TemporaryCanvas;
+
+  })();
+
+}).call(this);
+;(function() {
   this.BackgroundTransition = (function() {
     function BackgroundTransition(background, duration) {
       this.background = background;
@@ -981,8 +1009,8 @@
     this.BigSea = {};
   }
 
-  this.BigSea.AnimationManager = (function() {
-    function AnimationManager() {
+  this.BigSea.AnimationFrameDispatch = (function() {
+    function AnimationFrameDispatch() {
       this.frame = __bind(this.frame, this);
       this.onResizeEvent = __bind(this.onResizeEvent, this);
       this.wibblyElementList = [];
@@ -992,7 +1020,7 @@
       window.addEventListener('resize', this.onResizeEvent);
     }
 
-    AnimationManager.prototype.onResizeEvent = function() {
+    AnimationFrameDispatch.prototype.onResizeEvent = function() {
       this.resize_flagged = true;
       if (!this.raf_confirmed) {
         this.resizeAll();
@@ -1000,7 +1028,7 @@
       }
     };
 
-    AnimationManager.prototype.register = function(element) {
+    AnimationFrameDispatch.prototype.register = function(element) {
       this.wibblyElementList.push(element);
       if (!this.running) {
         this.running = true;
@@ -1008,7 +1036,7 @@
       }
     };
 
-    AnimationManager.prototype.frame = function(timestamp) {
+    AnimationFrameDispatch.prototype.frame = function(timestamp) {
       if (timestamp == null) {
         timestamp = 0;
       }
@@ -1023,7 +1051,7 @@
       }
     };
 
-    AnimationManager.prototype.redraw = function(timestamp, force) {
+    AnimationFrameDispatch.prototype.redraw = function(timestamp, force) {
       var item, _i, _len, _ref, _results;
       if (force == null) {
         force = false;
@@ -1041,7 +1069,7 @@
       return _results;
     };
 
-    AnimationManager.prototype.needsResize = function() {
+    AnimationFrameDispatch.prototype.needsResize = function() {
       if (!this.resize_flagged) {
         return false;
       }
@@ -1049,7 +1077,7 @@
       return true;
     };
 
-    AnimationManager.prototype.resizeAll = function() {
+    AnimationFrameDispatch.prototype.resizeAll = function() {
       var item, _i, _len, _ref, _results;
       _ref = this.wibblyElementList;
       _results = [];
@@ -1060,7 +1088,7 @@
       return _results;
     };
 
-    return AnimationManager;
+    return AnimationFrameDispatch;
 
   })();
 
@@ -1069,7 +1097,7 @@
   var __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
 
   this.WibblyElement = (function() {
-    WibblyElement.AnimationManager = new BigSea.AnimationManager();
+    WibblyElement.FrameDispatch = new BigSea.AnimationFrameDispatch();
 
     function WibblyElement(element) {
       this.element = element;
@@ -1082,7 +1110,7 @@
       this.loadBackground(this.element);
       this.createCanvas();
       this.removeLoadingClass(this.element);
-      WibblyElement.AnimationManager.register(this);
+      WibblyElement.FrameDispatch.register(this);
     }
 
     WibblyElement.prototype.removeLoadingClass = function(element) {
@@ -1142,19 +1170,18 @@
     };
 
     WibblyElement.prototype.resize = function() {
-      var dims, tmpCanvas, tmpContext;
+      var dims;
       dims = this.getElementDimensions(this.element);
       this.canvas.style.top = "" + dims.topMargin + "px";
-      tmpCanvas = document.createElement('canvas');
-      tmpCanvas.width = dims.width;
-      tmpCanvas.height = dims.totalHeight;
-      tmpContext = tmpCanvas.getContext('2d');
-      tmpContext.drawImage(this.canvas, 0, 0, this.canvas.width, this.canvas.height, 0, 0, dims.width, dims.totalHeight);
+      if (this.tmpCanvas == null) {
+        this.tmpCanvas = new BigSea.TemporaryCanvas;
+      }
+      this.tmpCanvas.copyCanvas(this.canvas);
       this.canvas.width = dims.width;
       this.canvas.height = dims.totalHeight;
       this.canvas.style.width = "" + dims.width + "px";
       this.canvas.style.height = "" + dims.totalHeight + "px";
-      return this.context.drawImage(tmpContext.canvas, 0, 0, tmpCanvas.width, tmpCanvas.height, 0, 0, this.canvas.width, this.canvas.height);
+      return this.tmpCanvas.restoreToContext(this.context);
     };
 
     WibblyElement.prototype.needsAnimation = function() {

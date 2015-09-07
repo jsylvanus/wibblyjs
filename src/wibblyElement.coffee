@@ -1,7 +1,7 @@
 
 class @WibblyElement
 
-  @AnimationManager : new BigSea.AnimationManager()
+  @FrameDispatch : new BigSea.AnimationFrameDispatch()
   
   constructor: (@element) ->
     @redraw_needed = false
@@ -14,7 +14,7 @@ class @WibblyElement
     @loadBackground(@element)
     @createCanvas()
     @removeLoadingClass(@element)
-    WibblyElement.AnimationManager.register(@)
+    WibblyElement.FrameDispatch.register(@)
 
 
   removeLoadingClass : (element) ->
@@ -79,15 +79,18 @@ class @WibblyElement
 
     @canvas.style.top = "#{dims.topMargin}px" # if margin has changed (vw units)
 
-    # @tempCanvas.copy(@canvas, dims)
-    tmpCanvas = document.createElement('canvas')
-    tmpCanvas.width = dims.width
-    tmpCanvas.height = dims.totalHeight
-    tmpContext = tmpCanvas.getContext('2d')
+    @tmpCanvas ?= new BigSea.TemporaryCanvas
+    @tmpCanvas.copyCanvas(@canvas)
 
-    tmpContext.drawImage @canvas,
-      0, 0, @canvas.width, @canvas.height,
-      0, 0, dims.width, dims.totalHeight
+    # @tempCanvas.copy(@canvas, dims)
+    # tmpCanvas = document.createElement('canvas')
+    # tmpCanvas.width = dims.width
+    # tmpCanvas.height = dims.totalHeight
+    # tmpContext = tmpCanvas.getContext('2d')
+
+    # tmpContext.drawImage @canvas,
+    #   0, 0, @canvas.width, @canvas.height,
+    #   0, 0, dims.width, dims.totalHeight
 
     @canvas.width = dims.width
     @canvas.height = dims.totalHeight
@@ -95,9 +98,11 @@ class @WibblyElement
     @canvas.style.width = "#{dims.width}px"
     @canvas.style.height = "#{dims.totalHeight}px"
 
-    @context.drawImage tmpContext.canvas,
-      0, 0, tmpCanvas.width, tmpCanvas.height,
-      0, 0, @canvas.width, @canvas.height
+    @tmpCanvas.restoreToContext(@context)
+
+    # @context.drawImage tmpContext.canvas,
+    #   0, 0, tmpCanvas.width, tmpCanvas.height,
+    #   0, 0, @canvas.width, @canvas.height
 
 
   needsAnimation : ->
