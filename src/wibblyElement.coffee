@@ -74,8 +74,14 @@ class @WibblyElement
     @tmpCanvas.restoreToContext(@context)
 
 
+  isVisible : ->
+    @canvasLayer ?= new BigSea.Layer(0,0,0,0)
+    @canvasLayer.updateFromElement(@canvas)
+    BigSea.Layer.Viewport().intersects(@canvasLayer)
+
+
   needsAnimation : ->
-    # return no if not @isVisible()
+    return no if not @isVisible()
     return yes if @redraw_needed
     return yes if @background.requiresRedrawing
     return yes if @transitions.length > 0

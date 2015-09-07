@@ -1179,7 +1179,18 @@
       return this.tmpCanvas.restoreToContext(this.context);
     };
 
+    WibblyElement.prototype.isVisible = function() {
+      if (this.canvasLayer == null) {
+        this.canvasLayer = new BigSea.Layer(0, 0, 0, 0);
+      }
+      this.canvasLayer.updateFromElement(this.canvas);
+      return BigSea.Layer.Viewport().intersects(this.canvasLayer);
+    };
+
     WibblyElement.prototype.needsAnimation = function() {
+      if (!this.isVisible()) {
+        return false;
+      }
       if (this.redraw_needed) {
         return true;
       }
