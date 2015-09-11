@@ -1,5 +1,3 @@
-* Manage rendering with a central object that handles RAF callbacks
-* Stop rendering if off screen
 * Parallax support via data-parallax=[buffer-amount-in-px]
 * Background breakpoint support
 * Better srcset support
