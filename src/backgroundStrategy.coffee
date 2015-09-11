@@ -19,7 +19,6 @@ class @BackgroundStrategy
         new SolidBackground(segments[1])
 
       when 'anigif'
-        console.log segments
         new BigSea.AnigifBackground(segments[1])
 
       when 'video'

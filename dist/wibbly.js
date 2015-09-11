@@ -684,7 +684,6 @@
         case 'solid':
           return new SolidBackground(segments[1]);
         case 'anigif':
-          console.log(segments);
           return new BigSea.AnigifBackground(segments[1]);
         case 'video':
           try {
@@ -1034,7 +1033,9 @@
       if (dTime == null) {
         dTime = 0;
       }
-      this.imageContext.drawImage(this.image, 0, 0);
+      if (this.ready) {
+        this.imageContext.drawImage(this.image, 0, 0);
+      }
       return AnigifBackground.__super__.renderToCanvas.call(this, element, context, dTime);
     };
 

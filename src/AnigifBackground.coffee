@@ -7,5 +7,5 @@ class @BigSea.AnigifBackground extends @ImageBackground
     @requiresRedrawing = yes
 
   renderToCanvas : (element, context, dTime = 0) ->
-    @imageContext.drawImage @image, 0, 0
+    @imageContext.drawImage @image, 0, 0 if @ready
     super(element, context, dTime)
