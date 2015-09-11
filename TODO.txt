@@ -3,6 +3,5 @@
 * Better srcset support
 * Detect and throttle if dropping frames
 * Ability to animate points on beziers
-* Animated gif background support
 
 see also $ grep TODO -r .
