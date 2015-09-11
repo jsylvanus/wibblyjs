@@ -172,8 +172,8 @@
       this.vector = new Vector(width, height);
     }
 
-    Dimensions.prototype.equals = function(dOther) {
-      return this.vector.equals(dOther.vector);
+    Dimensions.prototype.equals = function(other_distance) {
+      return this.vector.equals(other_distance.vector);
     };
 
     Dimensions.prototype.scale = function(factor) {
@@ -683,6 +683,9 @@
       switch (segments[0]) {
         case 'solid':
           return new SolidBackground(segments[1]);
+        case 'anigif':
+          console.log(segments);
+          return new BigSea.AnigifBackground(segments[1]);
         case 'video':
           try {
             return new VideoBackground(segments[1]);
@@ -1009,6 +1012,35 @@
     return VideoBackground;
 
   })(this.BackgroundStrategy);
+
+}).call(this);
+;(function() {
+  var __hasProp = {}.hasOwnProperty,
+    __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+
+  if (this.BigSea == null) {
+    this.BigSea = {};
+  }
+
+  this.BigSea.AnigifBackground = (function(_super) {
+    __extends(AnigifBackground, _super);
+
+    function AnigifBackground(url) {
+      AnigifBackground.__super__.constructor.call(this, url);
+      this.requiresRedrawing = true;
+    }
+
+    AnigifBackground.prototype.renderToCanvas = function(element, context, dTime) {
+      if (dTime == null) {
+        dTime = 0;
+      }
+      this.imageContext.drawImage(this.image, 0, 0);
+      return AnigifBackground.__super__.renderToCanvas.call(this, element, context, dTime);
+    };
+
+    return AnigifBackground;
+
+  })(this.ImageBackground);
 
 }).call(this);
 ;(function() {

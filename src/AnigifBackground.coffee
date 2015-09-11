@@ -1,0 +1,11 @@
+@BigSea ?= {}
+
+class @BigSea.AnigifBackground extends @ImageBackground
+
+  constructor : (url) ->
+    super(url)
+    @requiresRedrawing = yes
+
+  renderToCanvas : (element, context, dTime = 0) ->
+    @imageContext.drawImage @image, 0, 0
+    super(element, context, dTime)

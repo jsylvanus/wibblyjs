@@ -9,9 +9,6 @@ class @Vector
 
   constructor: (@values...) -> @values
 
-
-  # TODO: Maybe make a better version? this won't catch nested objects, should 
-  # that ever be required by the class. Not needed for now.
   clone : -> new Vector(@values...)
     
   reverse : -> @scale(-1)

@@ -40,6 +40,7 @@ module.exports = function(grunt) {
 					'build/imageBackground.js',
 					'build/solidBackground.js',
 					'build/videoBackground.js',
+    				'build/AnigifBackground.js',
 					'build/AnimationFrameDispatch.js',
 					'build/wibblyElement.js'
 	    		],

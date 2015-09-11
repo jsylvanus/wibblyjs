@@ -10,7 +10,7 @@ class @Dimensions
   constructor: (width, height) ->
     @vector = new Vector(width, height)
 
-  equals: (dOther) -> @vector.equals(dOther.vector)
+  equals: (other_distance) -> @vector.equals(other_distance.vector)
 
   scale : (factor) ->
     box = new Dimensions(@vector.x(), @vector.y())
