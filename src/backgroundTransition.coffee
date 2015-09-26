@@ -1,6 +1,5 @@
 
-class @BackgroundTransition
-
+class BackgroundTransition
 
   constructor : (@background, @duration) ->
     @finished = if @duration > 0 then no else yes
@@ -45,3 +44,4 @@ class @BackgroundTransition
 
     is_ios or missing_dt_now or not has_raf
     
+module.exports = BackgroundTransition

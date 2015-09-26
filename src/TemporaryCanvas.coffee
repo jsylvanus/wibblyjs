@@ -1,6 +1,5 @@
-@BigSea ?= {}
 
-class @BigSea.TemporaryCanvas
+class TemporaryCanvas
 
   constructor : ->
     @internalCanvas = document.createElement('canvas')
@@ -14,3 +13,5 @@ class @BigSea.TemporaryCanvas
   restoreToContext : (otherContext) ->
     otherCanvas = otherContext.canvas
     otherContext.drawImage(@internalCanvas, 0, 0, otherCanvas.width, otherCanvas.height)
+
+module.exports = TemporaryCanvas

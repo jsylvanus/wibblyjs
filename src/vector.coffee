@@ -4,7 +4,7 @@
 #
 # NOTE: will probably expand this as required
 
-class @Vector
+class Vector
 
 
   constructor: (@values...) -> @values
@@ -48,3 +48,5 @@ class @Vector
   z : ->
     return @values[2] if @values.length > 2
     null
+
+module.exports = Vector

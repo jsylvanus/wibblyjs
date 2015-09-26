@@ -7,56 +7,26 @@ module.exports = function(grunt) {
       '<%= grunt.template.today("yyyy-mm-dd") %>\n' +
       '<%= pkg.homepage ? "* " + pkg.homepage + "\\n" : "" %>',
 
-	coffee : {
-		dist : {
-			files : [ {
-				expand : true,
-				flatten : true,
-				cwd : 'src/',
-				src : ['**/*.coffee'],
-				dest : 'build/',
-				ext : '.js'
-			} ]
-		}
-	},
-
-    concat : {
-    	options : {
-    		separator : ';'
-    	},
+    browserify : {
     	dist : {
+    		options : {
+    			browserifyOptions : {
+    				extensions: '.coffee'
+    			},
+    			transform : ['coffeeify'],
+    			expose : 'WibblyElement'
+    		},
     		files : {
-    			'dist/wibbly.js' : [
-    				'build/raf.js',
-					'build/vector.js',
-					'build/dimensions.js',
-    				'build/Layer.js',
-					'build/scalableBezier.js',
-    				'build/BezierMask.js',
-    				'build/TemporaryCanvas.js',
-    				'build/ElementDimensions.js',
-					'build/backgroundTransition.js',
-					'build/backgroundStrategy.js',
-					'build/imageBackground.js',
-					'build/solidBackground.js',
-					'build/videoBackground.js',
-    				'build/AnigifBackground.js',
-					'build/AnimationFrameDispatch.js',
-					'build/wibblyElement.js'
-	    		],
-	    		'dist/wibblytabs.js' : [
-	    			'build/objectcycler.js',
-					'build/wibblyTabs.js'
-	    		]
-	    	}
+    			'dist/wibbly.js' : ['src/wibblyElement.coffee'],
+    			'dist/wibblyTabs.js' : ['src/wibblyTabs.coffee']
+    		}
     	}
     },
 
     uglify : {
     	dist : {
     		files : {
-    			'dist/wibbly.min.js' : [ 'dist/wibbly.js' ],
-    			'dist/wibblytabs.min.js' : [ 'dist/wibblytabs.js' ]
+    			'dist/wibbly.min.js' : [ 'dist/wibbly.js' ]
     		}
     	}
     },
@@ -78,8 +48,10 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-uglify');
   grunt.loadNpmTasks('grunt-contrib-watch');
   grunt.loadNpmTasks('grunt-contrib-coffee');
+  grunt.loadNpmTasks('grunt-coffeeify');
+  grunt.loadNpmTasks('grunt-browserify');
 
   // Tasks
-  grunt.registerTask('default', ['coffee','concat']);
+  grunt.registerTask('default', ['browserify']);
   grunt.registerTask('build', ['default','uglify'])
 };

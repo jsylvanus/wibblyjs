@@ -1,5 +1,7 @@
+BackgroundStrategy = require('./backgroundStrategy')
+SolidBackground = require('./solidBackground')
 
-class @ImageBackground extends @BackgroundStrategy
+class ImageBackground extends BackgroundStrategy
   
   fallbackColor = '#000'
 
@@ -74,3 +76,5 @@ class @ImageBackground extends @BackgroundStrategy
     img = document.createElement('img')
     typeof img.srcset is 'string'
     
+
+module.exports = ImageBackground

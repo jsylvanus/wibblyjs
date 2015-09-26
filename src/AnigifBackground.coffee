@@ -1,6 +1,6 @@
-@BigSea ?= {}
+ImageBackground = require('./imageBackground')
 
-class @BigSea.AnigifBackground extends @ImageBackground
+class AnigifBackground extends ImageBackground
 
   constructor : (url) ->
     super(url)
@@ -9,3 +9,5 @@ class @BigSea.AnigifBackground extends @ImageBackground
   renderToCanvas : (element, context, dTime = 0) ->
     @imageContext.drawImage @image, 0, 0 if @ready
     super(element, context, dTime)
+
+module.exports = AnigifBackground

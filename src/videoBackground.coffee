@@ -1,5 +1,7 @@
+BackgroundStrategy = require('./BackgroundStrategy')
+ImageBackground = require('./imageBackground')
 
-class @VideoBackground extends @BackgroundStrategy
+class VideoBackground extends BackgroundStrategy
 
   constructor: (baseurl) ->
     @debug = false

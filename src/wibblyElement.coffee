@@ -1,7 +1,16 @@
+AnimationFrameDispatch = require('./AnimationFrameDispatch')
+BezierMask = require('./BezierMask')
+BackgroundStrategy = require('./backgroundStrategy')
+ElementDimensions = require('./ElementDimensions')
+TemporaryCanvas = require('./TemporaryCanvas')
+Layer = require('./Layer')
+BackgroundTransition = require('./backgroundTransition')
+RAFPatch = require('./raf')
+RAFPatch()
 
-class @WibblyElement
+class WibblyElement
 
-  @FrameDispatch : new BigSea.AnimationFrameDispatch()
+  @FrameDispatch : new AnimationFrameDispatch()
   
   constructor: (@element) ->
     @redraw_needed = false
@@ -10,7 +19,7 @@ class @WibblyElement
     @compositeSupported = @isCompositeSupported()
     @element.style.position = 'relative'
 
-    @bezierMask = BigSea.BezierMask.fromElementAttributes(@element)
+    @bezierMask = BezierMask.fromElementAttributes(@element)
     @loadBackground(@element)
     @createCanvas()
     @removeLoadingClass(@element)
@@ -52,7 +61,7 @@ class @WibblyElement
   
 
   getElementDimensions : (element) ->
-    @elementDims ?= new BigSea.ElementDimensions
+    @elementDims ?= new ElementDimensions
     @elementDims.updateFromElement(element)
 
   
@@ -63,7 +72,7 @@ class @WibblyElement
     # change top margin in case margin has changed (e.g. vw units)
     @canvas.style.top = "#{dims.topMargin}px"
 
-    @tmpCanvas ?= new BigSea.TemporaryCanvas
+    @tmpCanvas ?= new TemporaryCanvas
     @tmpCanvas.copyCanvas(@canvas)
 
     @canvas.width = dims.width
@@ -75,9 +84,9 @@ class @WibblyElement
 
 
   isVisible : ->
-    @canvasLayer ?= new BigSea.Layer(0,0,0,0)
+    @canvasLayer ?= new Layer(0,0,0,0)
     @canvasLayer.updateFromElement(@canvas)
-    BigSea.Layer.Viewport().intersects(@canvasLayer)
+    Layer.Viewport().intersects(@canvasLayer)
 
 
   needsAnimation : ->
@@ -143,4 +152,4 @@ class @WibblyElement
 
     @redraw_needed = yes
 
-    
+window.WibblyElement = module.exports = WibblyElement

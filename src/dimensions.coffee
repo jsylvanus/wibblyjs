@@ -1,7 +1,6 @@
+Vector = require('./vector')
 
-# represents a box and some functions you might want to do with a box
-
-class @Dimensions
+class Dimensions
   
   @FromVector : (vec) ->
     new Dimensions vec.x(), vec.y()
@@ -52,3 +51,5 @@ class @Dimensions
     off_x = (other.width() - @width()) / 2.0
     off_y = (other.height() - @height()) / 2.0
     new Vector(off_x, off_y)
+
+module.exports = Dimensions

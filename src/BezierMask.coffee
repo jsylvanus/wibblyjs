@@ -1,13 +1,13 @@
-@BigSea ?= {}
+ScalableBezier = require('./scalableBezier')
 
-class @BigSea.BezierMask
+class BezierMask
   
   abs = Math.abs
 
   @fromElementAttributes : (element) ->
     top = ScalableBezier.FromAttribute element, 'data-top'
     bottom = ScalableBezier.FromAttribute element, 'data-bottom'
-    new BigSea.BezierMask top, bottom
+    new BezierMask top, bottom
 
   updateCanvasDimensions : (dims) ->
     @clipCanvas.width = dims.width
@@ -75,3 +75,5 @@ class @BigSea.BezierMask
 
   totalHeight : (dims) ->
     dims.height + abs(dims.topMargin) + abs(dims.bottomMargin)
+
+module.exports = BezierMask

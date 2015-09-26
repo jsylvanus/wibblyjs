@@ -1,5 +1,6 @@
+BackgroundStrategy = require('./backgroundStrategy')
 
-class @SolidBackground extends @BackgroundStrategy
+class SolidBackground extends BackgroundStrategy
   
   constructor: (color) ->
     super()
@@ -11,3 +12,5 @@ class @SolidBackground extends @BackgroundStrategy
     dim = @getDimensions element
     context.fillStyle = @color
     context.fillRect 0, 0, dim.width(), dim.height()
+
+module.exports = SolidBackground

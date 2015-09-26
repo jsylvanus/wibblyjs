@@ -1,8 +1,4 @@
-@BigSea ?= {}
-
-
-class @BigSea.AnimationFrameDispatch
-
+class AnimationFrameDispatch
 
   constructor : ->
     @wibblyElementList = []
@@ -52,3 +48,4 @@ class @BigSea.AnimationFrameDispatch
   resizeAll : ->
     item.resize() for item in @wibblyElementList
     
+module.exports = AnimationFrameDispatch

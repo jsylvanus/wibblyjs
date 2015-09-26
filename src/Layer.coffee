@@ -1,11 +1,12 @@
-@BigSea ?= {}
+Vector = require('./vector')
+Dimensions = require('./dimensions')
 
-class @BigSea.Layer
+class Layer
 
   viewport = null
 
   @Viewport : ->
-    viewport = new BigSea.Layer() if viewport is null
+    viewport = new Layer() if viewport is null
 
     left = window.pageXOffset
     top = window.pageYOffset
@@ -70,3 +71,5 @@ class @BigSea.Layer
       offset = elementOffset(element)
       @update(offset.left, offset.top, element.offsetWidth, element.offsetHeight)
     @
+
+module.exports = Layer

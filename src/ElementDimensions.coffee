@@ -1,6 +1,4 @@
-@BigSea ?= {}
-
-class @BigSea.ElementDimensions
+class ElementDimensions
   
   abs = Math.abs
   ceil = Math.ceil
@@ -27,3 +25,5 @@ class @BigSea.ElementDimensions
     @totalHeight = @height + abs(@topMargin) + abs(@bottomMargin)
 
     @
+
+module.exports = ElementDimensions

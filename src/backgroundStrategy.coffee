@@ -1,5 +1,10 @@
+SolidBackground = require('./solidBackground')
+AnigifBackground = require('./AnigifBackground')
+VideoBackground = require('./videoBackground')
+ImageBackground = require('./imageBackground')
+Dimensions = require('./dimensions')
 
-class @BackgroundStrategy
+class BackgroundStrategy
 
   # class method, constructs appropriate strategy for a data-background string.
   @Factory : (attribute_string = 'solid #000') ->
@@ -19,7 +24,7 @@ class @BackgroundStrategy
         new SolidBackground(segments[1])
 
       when 'anigif'
-        new BigSea.AnigifBackground(segments[1])
+        new AnigifBackground(segments[1])
 
       when 'video'
         try
@@ -95,3 +100,5 @@ class @BackgroundStrategy
 
   setCallback: (fn) ->
     null # implement me
+
+module.exports = BackgroundStrategy

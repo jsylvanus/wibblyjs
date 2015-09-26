@@ -1,5 +1,5 @@
 
-class @ScalableBezier
+class ScalableBezier
 
   @FromAttribute : (element, attribute) ->
     test = element.attributes.getNamedItem(attribute)
@@ -84,4 +84,4 @@ class @ScalableBezier
     @controlY1 = @controlY2
     @controlY2 = tmp
 
-
+module.exports = ScalableBezier

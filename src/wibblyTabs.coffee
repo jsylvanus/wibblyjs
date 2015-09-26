@@ -1,6 +1,6 @@
+WibblyElement = require('./wibblyElement')
 
-class @WibblyTabs
-
+class WibblyTabs
 
   constructor : (@$, @wibblyContainer) ->
     # set up tabs
@@ -40,3 +40,5 @@ class @WibblyTabs
     # set new background on wibblyElement
     imagedata = @currentElement.data 'background'
     @wibbly.changeBackground imagedata, 1000
+
+window.WibblyTabs = module.exports = WibblyTabs
