@@ -1,4 +1,4 @@
-BackgroundStrategy = require('./BackgroundStrategy')
+BackgroundStrategy = require('./backgroundStrategy')
 ImageBackground = require('./imageBackground')
 
 class VideoBackground extends BackgroundStrategy

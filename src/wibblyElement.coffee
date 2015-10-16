@@ -5,6 +5,7 @@ ElementDimensions = require('./ElementDimensions')
 TemporaryCanvas = require('./TemporaryCanvas')
 Layer = require('./Layer')
 BackgroundTransition = require('./backgroundTransition')
+BackgroundFactory = require('./BackgroundFactory')
 RAFPatch = require('./raf')
 RAFPatch()
 
@@ -15,6 +16,7 @@ class WibblyElement
   constructor: (@element) ->
     @redraw_needed = false
     @transitions = []
+    @bgFactory = new BackgroundFactory()
 
     @compositeSupported = @isCompositeSupported()
     @element.style.position = 'relative'
@@ -42,7 +44,7 @@ class WibblyElement
     attribute = element.attributes.getNamedItem('data-background')
     throw "missing required data-background attribute" if attribute is null
 
-    @background = BackgroundStrategy.Factory attribute.value
+    @background = @bgFactory.create attribute.value
     @background.setCallback =>
       @redraw_needed = yes
 
@@ -137,7 +139,7 @@ class WibblyElement
   changeBackground : (backgroundString, duration = 0) ->
     # create new background object
     try
-      new_background = BackgroundStrategy.Factory backgroundString
+      new_background = @bgFactory.create backgroundString
     catch error
       console.log error
       return

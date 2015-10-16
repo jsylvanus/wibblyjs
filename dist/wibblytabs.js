@@ -121,7 +121,7 @@ module.exports = AnimationFrameDispatch;
 
 
 },{}],3:[function(require,module,exports){
-var AnigifBackground, BackgroundStrategy, Dimensions, ImageBackground, SolidBackground, VideoBackground;
+var AnigifBackground, BackgroundFactory, ImageBackground, SolidBackground, VideoBackground;
 
 SolidBackground = require('./solidBackground');
 
@@ -131,10 +131,10 @@ VideoBackground = require('./videoBackground');
 
 ImageBackground = require('./imageBackground');
 
-Dimensions = require('./dimensions');
+BackgroundFactory = (function() {
+  function BackgroundFactory() {}
 
-BackgroundStrategy = (function() {
-  BackgroundStrategy.Factory = function(attribute_string) {
+  BackgroundFactory.prototype.create = function(attribute_string) {
     var error, error1, segments;
     if (attribute_string == null) {
       attribute_string = 'solid #000';
@@ -175,83 +175,14 @@ BackgroundStrategy = (function() {
     }
   };
 
-  function BackgroundStrategy() {
-    this.lastBox = null;
-    this.ready = false;
-    this.requiresRedrawing = false;
-    this.callback = null;
-  }
-
-  BackgroundStrategy.prototype.getDimensions = function(element) {
-    if (element instanceof HTMLVideoElement) {
-      return new Dimensions(element.videoWidth, element.videoHeight);
-    }
-    if (element instanceof HTMLImageElement) {
-      return new Dimensions(element.naturalWidth, element.naturalHeight);
-    }
-    return new Dimensions(element.width, element.height);
-  };
-
-  BackgroundStrategy.prototype.sourceBox = function(dCanvas, dSource) {
-    var offset, scaledCanvasBox;
-    scaledCanvasBox = dCanvas.scaleToFit(dSource);
-    offset = scaledCanvasBox.centerOffset(dSource);
-    return {
-      source: {
-        x: Math.floor(offset.x()),
-        y: Math.floor(offset.y())
-      },
-      dims: {
-        width: Math.floor(scaledCanvasBox.width()),
-        height: Math.floor(scaledCanvasBox.height())
-      }
-    };
-  };
-
-  BackgroundStrategy.prototype.getRenderBox = function(dCanvas, sourceElement) {
-    var box, imageDims;
-    if (this.lastBox !== null && dCanvas.equals(this.lastDims)) {
-      box = this.lastBox;
-    } else {
-      this.lastDims = dCanvas;
-      imageDims = this.getDimensions(sourceElement);
-      this.lastBox = this.sourceBox(dCanvas, imageDims);
-      if (this.lastBox.source.x < 0) {
-        this.lastBox.source.x = 0;
-      }
-      if (this.lastBox.source.y < 0) {
-        this.lastBox.source.y = 0;
-      }
-      if (this.lastBox.dims.height > imageDims.height()) {
-        this.lastBox.dims.height = imageDims.height();
-      }
-      if (this.lastBox.dims.width > imageDims.width()) {
-        this.lastBox.dims.width = imageDims.width();
-      }
-      box = this.lastBox;
-    }
-    return box;
-  };
-
-  BackgroundStrategy.prototype.renderToCanvas = function(element, context, dTime) {
-    if (dTime == null) {
-      dTime = 0;
-    }
-    return null;
-  };
-
-  BackgroundStrategy.prototype.setCallback = function(fn) {
-    return null;
-  };
-
-  return BackgroundStrategy;
+  return BackgroundFactory;
 
 })();
 
-module.exports = BackgroundStrategy;
+module.exports = BackgroundFactory;
 
 
-},{"./AnigifBackground":1,"./dimensions":10,"./imageBackground":11,"./solidBackground":14,"./videoBackground":16}],4:[function(require,module,exports){
+},{"./AnigifBackground":1,"./imageBackground":11,"./solidBackground":14,"./videoBackground":16}],4:[function(require,module,exports){
 var BezierMask, ScalableBezier;
 
 ScalableBezier = require('./scalableBezier');
@@ -533,60 +464,11 @@ module.exports = TemporaryCanvas;
 
 
 },{}],8:[function(require,module,exports){
-var AnigifBackground, BackgroundStrategy, Dimensions, ImageBackground, SolidBackground, VideoBackground;
-
-SolidBackground = require('./solidBackground');
-
-AnigifBackground = require('./AnigifBackground');
-
-VideoBackground = require('./videoBackground');
-
-ImageBackground = require('./imageBackground');
+var BackgroundStrategy, Dimensions;
 
 Dimensions = require('./dimensions');
 
 BackgroundStrategy = (function() {
-  BackgroundStrategy.Factory = function(attribute_string) {
-    var error, error1, segments;
-    if (attribute_string == null) {
-      attribute_string = 'solid #000';
-    }
-    if (typeof attribute_string !== 'string') {
-      throw "attribute_string is not a string";
-    }
-    segments = attribute_string.split(' ');
-    if (segments.length < 2) {
-      throw "background attribute format is \"type [params...]\" with minimum of one parameter.";
-    }
-    switch (segments[0]) {
-      case 'solid':
-        return new SolidBackground(segments[1]);
-      case 'anigif':
-        return new AnigifBackground(segments[1]);
-      case 'video':
-        try {
-          return new VideoBackground(segments[1]);
-        } catch (error1) {
-          error = error1;
-          if (error === "No HTML5 video support detected") {
-            return new ImageBackground(segments[1] + '.jpg');
-          } else {
-            throw error;
-          }
-        }
-        break;
-      case 'image':
-        if (segments.length === 2) {
-          return new ImageBackground(segments[1]);
-        } else {
-          return new ImageBackground(segments.slice(1));
-        }
-        break;
-      default:
-        throw "\"" + segments[0] + "\" is not a valid background type";
-    }
-  };
-
   function BackgroundStrategy() {
     this.lastBox = null;
     this.ready = false;
@@ -663,7 +545,7 @@ BackgroundStrategy = (function() {
 module.exports = BackgroundStrategy;
 
 
-},{"./AnigifBackground":1,"./dimensions":10,"./imageBackground":11,"./solidBackground":14,"./videoBackground":16}],9:[function(require,module,exports){
+},{"./dimensions":10}],9:[function(require,module,exports){
 var BackgroundTransition;
 
 BackgroundTransition = (function() {
@@ -1226,7 +1108,7 @@ var BackgroundStrategy, ImageBackground, VideoBackground,
   extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
   hasProp = {}.hasOwnProperty;
 
-BackgroundStrategy = require('./BackgroundStrategy');
+BackgroundStrategy = require('./backgroundStrategy');
 
 ImageBackground = require('./imageBackground');
 
@@ -1330,8 +1212,8 @@ VideoBackground = (function(superClass) {
 })(BackgroundStrategy);
 
 
-},{"./BackgroundStrategy":3,"./imageBackground":11}],17:[function(require,module,exports){
-var AnimationFrameDispatch, BackgroundStrategy, BackgroundTransition, BezierMask, ElementDimensions, Layer, RAFPatch, TemporaryCanvas, WibblyElement,
+},{"./backgroundStrategy":8,"./imageBackground":11}],17:[function(require,module,exports){
+var AnimationFrameDispatch, BackgroundFactory, BackgroundStrategy, BackgroundTransition, BezierMask, ElementDimensions, Layer, RAFPatch, TemporaryCanvas, WibblyElement,
   bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
 
 AnimationFrameDispatch = require('./AnimationFrameDispatch');
@@ -1348,6 +1230,8 @@ Layer = require('./Layer');
 
 BackgroundTransition = require('./backgroundTransition');
 
+BackgroundFactory = require('./BackgroundFactory');
+
 RAFPatch = require('./raf');
 
 RAFPatch();
@@ -1360,6 +1244,7 @@ WibblyElement = (function() {
     this.draw = bind(this.draw, this);
     this.redraw_needed = false;
     this.transitions = [];
+    this.bgFactory = new BackgroundFactory();
     this.compositeSupported = this.isCompositeSupported();
     this.element.style.position = 'relative';
     this.bezierMask = BezierMask.fromElementAttributes(this.element);
@@ -1387,7 +1272,7 @@ WibblyElement = (function() {
     if (attribute === null) {
       throw "missing required data-background attribute";
     }
-    this.background = BackgroundStrategy.Factory(attribute.value);
+    this.background = this.bgFactory.create(attribute.value);
     return this.background.setCallback((function(_this) {
       return function() {
         return _this.redraw_needed = true;
@@ -1502,7 +1387,7 @@ WibblyElement = (function() {
       duration = 0;
     }
     try {
-      new_background = BackgroundStrategy.Factory(backgroundString);
+      new_background = this.bgFactory.create(backgroundString);
     } catch (error1) {
       error = error1;
       console.log(error);
@@ -1524,7 +1409,7 @@ WibblyElement = (function() {
 window.WibblyElement = module.exports = WibblyElement;
 
 
-},{"./AnimationFrameDispatch":2,"./BezierMask":4,"./ElementDimensions":5,"./Layer":6,"./TemporaryCanvas":7,"./backgroundStrategy":8,"./backgroundTransition":9,"./raf":12}],18:[function(require,module,exports){
+},{"./AnimationFrameDispatch":2,"./BackgroundFactory":3,"./BezierMask":4,"./ElementDimensions":5,"./Layer":6,"./TemporaryCanvas":7,"./backgroundStrategy":8,"./backgroundTransition":9,"./raf":12}],18:[function(require,module,exports){
 var WibblyElement, WibblyTabs;
 
 WibblyElement = require('./wibblyElement');
