@@ -134,6 +134,10 @@ ImageBackground = require('./imageBackground');
 BackgroundFactory = (function() {
   function BackgroundFactory() {}
 
+  BackgroundFactory.prototype.setFallbackColor = function(color) {
+    return ImageBackground.SetFallbackColor(color);
+  };
+
   BackgroundFactory.prototype.create = function(attribute_string) {
     var error, error1, segments;
     if (attribute_string == null) {
@@ -1245,6 +1249,7 @@ WibblyElement = (function() {
     this.redraw_needed = false;
     this.transitions = [];
     this.bgFactory = new BackgroundFactory();
+    this.bgFactory.setFallbackColor(this.fallbackColor(this.element));
     this.compositeSupported = this.isCompositeSupported();
     this.element.style.position = 'relative';
     this.bezierMask = BezierMask.fromElementAttributes(this.element);
@@ -1253,6 +1258,10 @@ WibblyElement = (function() {
     this.removeLoadingClass(this.element);
     WibblyElement.FrameDispatch.register(this);
   }
+
+  WibblyElement.prototype.fallbackColor = function(element) {
+    return element.getAttribute('data-fallback-color') || '#000';
+  };
 
   WibblyElement.prototype.removeLoadingClass = function(element) {
     return element.className = element.className.replace(/\bwib-loading\b/, '');

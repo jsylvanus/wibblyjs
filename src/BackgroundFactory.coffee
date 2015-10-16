@@ -5,6 +5,9 @@ ImageBackground = require('./imageBackground')
 
 class BackgroundFactory
 
+  setFallbackColor : (color) ->
+    ImageBackground.SetFallbackColor color
+
   # class method, constructs appropriate strategy for a data-background string.
   create : (attribute_string = 'solid #000') ->
 

@@ -17,6 +17,7 @@ class WibblyElement
     @redraw_needed = false
     @transitions = []
     @bgFactory = new BackgroundFactory()
+    @bgFactory.setFallbackColor @fallbackColor(@element)
 
     @compositeSupported = @isCompositeSupported()
     @element.style.position = 'relative'
@@ -26,6 +27,10 @@ class WibblyElement
     @createCanvas()
     @removeLoadingClass(@element)
     WibblyElement.FrameDispatch.register(@)
+
+
+  fallbackColor : (element) ->
+    element.getAttribute('data-fallback-color') or '#000'
 
 
   removeLoadingClass : (element) ->
