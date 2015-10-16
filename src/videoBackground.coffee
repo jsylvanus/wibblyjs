@@ -79,3 +79,4 @@ class VideoBackground extends BackgroundStrategy
   setCallback : (fn) ->
     @callback = fn
 
+module.exports = VideoBackground

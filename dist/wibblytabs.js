@@ -1215,6 +1215,8 @@ VideoBackground = (function(superClass) {
 
 })(BackgroundStrategy);
 
+module.exports = VideoBackground;
+
 
 },{"./backgroundStrategy":8,"./imageBackground":11}],17:[function(require,module,exports){
 var AnimationFrameDispatch, BackgroundFactory, BackgroundStrategy, BackgroundTransition, BezierMask, ElementDimensions, Layer, RAFPatch, TemporaryCanvas, WibblyElement,
