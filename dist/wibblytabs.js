@@ -121,7 +121,7 @@ module.exports = AnimationFrameDispatch;
 
 
 },{}],3:[function(require,module,exports){
-var AnigifBackground, BackgroundFactory, ImageBackground, SolidBackground, VideoBackground;
+var AnigifBackground, BackgroundFactory, ImageBackground, PrideVideoBackground, SolidBackground, VideoBackground;
 
 SolidBackground = require('./solidBackground');
 
@@ -131,6 +131,8 @@ VideoBackground = require('./videoBackground');
 
 ImageBackground = require('./imageBackground');
 
+PrideVideoBackground = require('./prideVideoBackground');
+
 BackgroundFactory = (function() {
   function BackgroundFactory() {}
 
@@ -139,7 +141,7 @@ BackgroundFactory = (function() {
   };
 
   BackgroundFactory.prototype.create = function(attribute_string) {
-    var error, error1, segments;
+    var error, error1, error2, segments;
     if (attribute_string == null) {
       attribute_string = 'solid #000';
     }
@@ -155,11 +157,23 @@ BackgroundFactory = (function() {
         return new SolidBackground(segments[1]);
       case 'anigif':
         return new AnigifBackground(segments[1]);
+      case 'pride':
+        try {
+          return new PrideVideoBackground(segments[1]);
+        } catch (error1) {
+          error = error1;
+          if (error === "No HTML5 video support detected") {
+            return new ImageBackground(segments[1] + '.jpg');
+          } else {
+            throw error;
+          }
+        }
+        break;
       case 'video':
         try {
           return new VideoBackground(segments[1]);
-        } catch (error1) {
-          error = error1;
+        } catch (error2) {
+          error = error2;
           if (error === "No HTML5 video support detected") {
             return new ImageBackground(segments[1] + '.jpg');
           } else {
@@ -186,7 +200,7 @@ BackgroundFactory = (function() {
 module.exports = BackgroundFactory;
 
 
-},{"./AnigifBackground":1,"./imageBackground":11,"./solidBackground":14,"./videoBackground":16}],4:[function(require,module,exports){
+},{"./AnigifBackground":1,"./imageBackground":11,"./prideVideoBackground":12,"./solidBackground":15,"./videoBackground":17}],4:[function(require,module,exports){
 var BezierMask, ScalableBezier;
 
 ScalableBezier = require('./scalableBezier');
@@ -285,7 +299,7 @@ BezierMask = (function() {
 module.exports = BezierMask;
 
 
-},{"./scalableBezier":13}],5:[function(require,module,exports){
+},{"./scalableBezier":14}],5:[function(require,module,exports){
 var ElementDimensions;
 
 ElementDimensions = (function() {
@@ -439,7 +453,7 @@ Layer = (function() {
 module.exports = Layer;
 
 
-},{"./dimensions":10,"./vector":15}],7:[function(require,module,exports){
+},{"./dimensions":10,"./vector":16}],7:[function(require,module,exports){
 var TemporaryCanvas;
 
 TemporaryCanvas = (function() {
@@ -679,7 +693,7 @@ Dimensions = (function() {
 module.exports = Dimensions;
 
 
-},{"./vector":15}],11:[function(require,module,exports){
+},{"./vector":16}],11:[function(require,module,exports){
 var BackgroundStrategy, ImageBackground, SolidBackground,
   extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
   hasProp = {}.hasOwnProperty;
@@ -788,7 +802,46 @@ ImageBackground = (function(superClass) {
 module.exports = ImageBackground;
 
 
-},{"./backgroundStrategy":8,"./solidBackground":14}],12:[function(require,module,exports){
+},{"./backgroundStrategy":8,"./solidBackground":15}],12:[function(require,module,exports){
+var PrideVideoBackground, VideoBackground, hue,
+  extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+  hasProp = {}.hasOwnProperty;
+
+VideoBackground = require('./videoBackground');
+
+hue = function(value) {
+  return "hsl(" + (value * 360) + ", 100%, 50%)";
+};
+
+PrideVideoBackground = (function(superClass) {
+  extend(PrideVideoBackground, superClass);
+
+  function PrideVideoBackground(baseurl) {
+    PrideVideoBackground.__super__.constructor.call(this, baseurl);
+    this.color = hue(0.0);
+  }
+
+  PrideVideoBackground.prototype.renderToCanvas = function(element, context, dTime) {
+    if (dTime == null) {
+      dTime = 0;
+    }
+    PrideVideoBackground.__super__.renderToCanvas.call(this, element, context, dTime);
+    this.color = hue((dTime % 6000.0) / 6000.0);
+    context.save();
+    context.globalCompositeOperation = 'hue';
+    context.fillStyle = this.color;
+    context.fillRect(0, 0, context.canvas.width, context.canvas.height);
+    return context.restore();
+  };
+
+  return PrideVideoBackground;
+
+})(VideoBackground);
+
+module.exports = PrideVideoBackground;
+
+
+},{"./videoBackground":17}],13:[function(require,module,exports){
 var patchAnimationFrame;
 
 patchAnimationFrame = function() {
@@ -862,7 +915,7 @@ patchAnimationFrame = function() {
 module.exports = patchAnimationFrame;
 
 
-},{}],13:[function(require,module,exports){
+},{}],14:[function(require,module,exports){
 var ScalableBezier;
 
 ScalableBezier = (function() {
@@ -975,7 +1028,7 @@ ScalableBezier = (function() {
 module.exports = ScalableBezier;
 
 
-},{}],14:[function(require,module,exports){
+},{}],15:[function(require,module,exports){
 var BackgroundStrategy, SolidBackground,
   extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
   hasProp = {}.hasOwnProperty;
@@ -1008,7 +1061,7 @@ SolidBackground = (function(superClass) {
 module.exports = SolidBackground;
 
 
-},{"./backgroundStrategy":8}],15:[function(require,module,exports){
+},{"./backgroundStrategy":8}],16:[function(require,module,exports){
 var Vector,
   slice = [].slice;
 
@@ -1107,7 +1160,7 @@ Vector = (function() {
 module.exports = Vector;
 
 
-},{}],16:[function(require,module,exports){
+},{}],17:[function(require,module,exports){
 var BackgroundStrategy, ImageBackground, VideoBackground,
   extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
   hasProp = {}.hasOwnProperty;
@@ -1218,8 +1271,8 @@ VideoBackground = (function(superClass) {
 module.exports = VideoBackground;
 
 
-},{"./backgroundStrategy":8,"./imageBackground":11}],17:[function(require,module,exports){
-var AnimationFrameDispatch, BackgroundFactory, BackgroundStrategy, BackgroundTransition, BezierMask, ElementDimensions, Layer, RAFPatch, TemporaryCanvas, WibblyElement,
+},{"./backgroundStrategy":8,"./imageBackground":11}],18:[function(require,module,exports){
+var AnimationFrameDispatch, BackgroundFactory, BackgroundStrategy, BackgroundTransition, BezierMask, ElementDimensions, ImageBackground, Layer, RAFPatch, TemporaryCanvas, WibblyElement,
   bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
 
 AnimationFrameDispatch = require('./AnimationFrameDispatch');
@@ -1227,6 +1280,8 @@ AnimationFrameDispatch = require('./AnimationFrameDispatch');
 BezierMask = require('./BezierMask');
 
 BackgroundStrategy = require('./backgroundStrategy');
+
+ImageBackground = require('./imageBackground');
 
 ElementDimensions = require('./ElementDimensions');
 
@@ -1243,6 +1298,10 @@ RAFPatch = require('./raf');
 RAFPatch();
 
 WibblyElement = (function() {
+  WibblyElement.SetDefaultBackground = function(fallback) {
+    return ImageBackground.SetFallbackColor(fallback);
+  };
+
   WibblyElement.FrameDispatch = new AnimationFrameDispatch();
 
   function WibblyElement(element1) {
@@ -1420,7 +1479,7 @@ WibblyElement = (function() {
 window.WibblyElement = module.exports = WibblyElement;
 
 
-},{"./AnimationFrameDispatch":2,"./BackgroundFactory":3,"./BezierMask":4,"./ElementDimensions":5,"./Layer":6,"./TemporaryCanvas":7,"./backgroundStrategy":8,"./backgroundTransition":9,"./raf":12}],18:[function(require,module,exports){
+},{"./AnimationFrameDispatch":2,"./BackgroundFactory":3,"./BezierMask":4,"./ElementDimensions":5,"./Layer":6,"./TemporaryCanvas":7,"./backgroundStrategy":8,"./backgroundTransition":9,"./imageBackground":11,"./raf":13}],19:[function(require,module,exports){
 var WibblyElement, WibblyTabs;
 
 WibblyElement = require('./wibblyElement');
@@ -1470,4 +1529,4 @@ WibblyTabs = (function() {
 window.WibblyTabs = module.exports = WibblyTabs;
 
 
-},{"./wibblyElement":17}]},{},[18]);
+},{"./wibblyElement":18}]},{},[19]);

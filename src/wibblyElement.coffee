@@ -1,6 +1,7 @@
 AnimationFrameDispatch = require('./AnimationFrameDispatch')
 BezierMask = require('./BezierMask')
 BackgroundStrategy = require('./backgroundStrategy')
+ImageBackground = require('./imageBackground')
 ElementDimensions = require('./ElementDimensions')
 TemporaryCanvas = require('./TemporaryCanvas')
 Layer = require('./Layer')
@@ -11,8 +12,11 @@ RAFPatch()
 
 class WibblyElement
 
+  @SetDefaultBackground : (fallback) ->
+    ImageBackground.SetFallbackColor(fallback)
+
   @FrameDispatch : new AnimationFrameDispatch()
-  
+
   constructor: (@element) ->
     @redraw_needed = false
     @transitions = []
@@ -65,17 +69,17 @@ class WibblyElement
     @canvas.style.zIndex = -1
 
     @element.appendChild @canvas
-  
+
 
   getElementDimensions : (element) ->
     @elementDims ?= new ElementDimensions
     @elementDims.updateFromElement(element)
 
-  
+
   resize : ->
 
     dims = @getElementDimensions @element
-    
+
     # change top margin in case margin has changed (e.g. vw units)
     @canvas.style.top = "#{dims.topMargin}px"
 
@@ -126,7 +130,7 @@ class WibblyElement
 
     for transition in @transitions
       transition.process(@canvas, @context, dimensions, timestamp)
-    
+
     old_required_animation = @background.requiresRedrawing
 
     # process transition queue

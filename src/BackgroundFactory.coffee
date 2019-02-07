@@ -2,6 +2,7 @@ SolidBackground = require('./solidBackground')
 AnigifBackground = require('./AnigifBackground')
 VideoBackground = require('./videoBackground')
 ImageBackground = require('./imageBackground')
+PrideVideoBackground = require('./prideVideoBackground')
 
 class BackgroundFactory
 
@@ -27,6 +28,15 @@ class BackgroundFactory
 
       when 'anigif'
         new AnigifBackground(segments[1])
+
+      when 'pride'
+        try
+          new PrideVideoBackground(segments[1])
+        catch error
+          if error == "No HTML5 video support detected"
+            new ImageBackground(segments[1] + '.jpg')
+          else
+            throw error
 
       when 'video'
         try
